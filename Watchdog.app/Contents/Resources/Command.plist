@@ -5,16 +5,36 @@
 	<key>COMMAND_LIST</key>
 	<array>
 		<dict>
-			<key>EXECUTION_MODE</key>
-			<string>exe_script_file</string>
-			<key>END_NOTIFICATION</key>
-			<dict/>
 			<key>NAME</key>
-			<string>Welcome</string>
+			<string>Watchdog</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file_with_output_window</string>
+			<key>ACTIVATION_MODE</key>
+			<string>act_folder</string>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>OMC_OBJ_PATH</key>
+				<string></string>
+			</dict>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>WINDOW_TYPE</key>
+				<string>global_floating</string>
+			</dict>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
 			<string>11.0</string>
 			<key>REQUIRED_OMC_VERSION</key>
 			<string>4.4</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>app.will.terminate</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>WAIT_FOR_TASK_COMPLETION</key>
+			<true/>
 		</dict>
 	</array>
 	<key>VERSION</key>
