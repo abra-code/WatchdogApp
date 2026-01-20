@@ -1,4 +1,5 @@
 # Watchdog.app
+![Watchdog Icon](Icon/Watchdog-macOS-128x128@2x.png)
 
 Watchdog is an app for monitoring file changes in directories.<br>
 It is built with OMC engine:<br>
