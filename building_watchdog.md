@@ -13,7 +13,7 @@ Watchdog.app/Contents/
     MacOS/Watchdog (app binary executable)
     _CodeSignature/ (generated codesigning files)
 ```
-These exclude files are NOT present in the repo but are created locally when following the build steps.
+These excluded files are NOT present in the repo but are created locally when following the build steps.
 
 Watchdog.icon was created using [Icon Composer.app](https://developer.apple.com/icon-composer/) and placed in `~/git/WatchdogApp/Icon/`
 
