@@ -20,11 +20,40 @@
 			<dict>
 				<key>WINDOW_TYPE</key>
 				<string>global_floating</string>
+				<key>WINDOW_POSITION</key>
+				<string>cascade</string>
+			</dict>
+			<key>NIB_DIALOG</key>
+			<dict>
+				<key>NIB_NAME</key>
+				<string>WatchdogMonitor</string>
+				<key>IS_BLOCKING</key>
+				<false/>
+				<key>INIT_SUBCOMMAND_ID</key>
+				<string>watchdog.monitor.init</string>
+				<key>END_CANCEL_SUBCOMMAND_ID</key>
+				<string>watchdog.monitor.close</string>
 			</dict>
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
 			<string>11.0</string>
 			<key>REQUIRED_OMC_VERSION</key>
 			<string>4.4</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.monitor.init</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.monitor.close</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
 		</dict>
 		<dict>
 			<key>NAME</key>
