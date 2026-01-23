@@ -28,5 +28,8 @@ elif [ "${watch_event_type}" = "deleted" ]; then
     watch_event_type="🗑️"
 fi
 
-echo "${timestamp}\t${watch_object}\t${watch_event_type}\t${watch_src_path}\t${watch_dest_path}"
+event_row="${timestamp}\t${watch_object}\t${watch_event_type}\t${watch_src_path}\t${watch_dest_path}"
+# echo "${event_row}"
 
+dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+echo "${event_row}" | "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_add_rows_from_stdin

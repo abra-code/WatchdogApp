@@ -8,14 +8,9 @@
 			<key>NAME</key>
 			<string>Watchdog</string>
 			<key>EXECUTION_MODE</key>
-			<string>exe_script_file_with_output_window</string>
+			<string>exe_script_file</string>
 			<key>ACTIVATION_MODE</key>
 			<string>act_folder</string>
-			<key>ENVIRONMENT_VARIABLES</key>
-			<dict>
-				<key>OMC_OBJ_PATH</key>
-				<string></string>
-			</dict>
 			<key>OUTPUT_WINDOW_SETTINGS</key>
 			<dict>
 				<key>WINDOW_TYPE</key>

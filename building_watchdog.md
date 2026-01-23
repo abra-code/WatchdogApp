@@ -197,7 +197,7 @@ for name in sorted(os.environ):
     print(f"{name: <32} = {os.environ[name]}")
 ```
 
-Printing environment variables will help us understand which variables are set up by OMC engine upon stript execution in any given context. Again, in order to see the output you need to hold "control" key when the command is starting. Or temporarily set `EXECUTION_MODE=exe_script_file_with_output_window` for initial debugging.
+Printing environment variables will help us understand which variables are set up by OMC engine upon script execution in any given context. Again, in order to see the output you need to hold "control" key when the command is starting. Or temporarily set `EXECUTION_MODE=exe_script_file_with_output_window` for initial debugging.
 
 Let's take a look at the env variables provided when executing `watchdog.monitor.init.py` script (uninteresting standard env variables snipped):
 
@@ -219,3 +219,44 @@ PYTHONPYCACHEPREFIX      = /tmp/Pyc
 4. `OMC_NIB_DLG_GUID` is an important variable with unique dialog/window instance identifier used to communicate with the window controls via `omc_dialog_control` tool
 5. `OMC_CURRENT_COMMAND_GUID` is another unique uuid, representing the running command instance and could be used for various purposes like saving unique files but most often used when invoking `omc_next_command` helper tool
 6. Last but not least, we have `OMC_OBJ_PATH` containing the selected file or directory path - the current context this command is invoked with.
+
+
+### Step 5: Adding a table view
+
+Double-clicking `WatchdogMonitor.nib` opens it for editing in Xcode.
+The window is empty with no controls in it except the content view. Xcode experience of editing nibs is not great by default. You need to show the inspectors under View -> Inspectors -> Attributes.<br>
+Now, the nib editing window should have the left pane with view hierarchy (aka document outline), central pane with window rendering and right pane with inspectors.
+You add new elements to currently focused view by clicking the [+] button at the bottom of central pane (aka "Show Library"). A window pops up with choices of elements. Find "Table View". Table view is inserted inside a wrapping Scroll View. In sizing inspector you will want to set its auto-sizing rules.<br>
+Digging through the view hierarchy in the left pane when you select the actual embedded Table View you need to make changes in the inspectors. In "Identity" inspector you should change "Class" from NSTableView to OMCTableView. This adds support for OMC engine features in the table. Switching to "Attributes" inspector, you need to change the "Content Mode" from "View Based" to "Cell Based" because this is what OMC engine supports. Last, but not least you need to change the view "Tag" from 0 to 1. This is the important part. This control now has the identifier = 1 and can be found and manipulated by OMC by its identifier. <br>
+There are other settings you may want to apply and make some tweaks for the appearance of the table and its cells. At this point we don't change the number of columns or name them - this will be done in the code soon.
+
+With modification we can start the applet again and see that the table is displayed but it is empty and is not set up. The setup is going to happen in "watchdog.monitor.init.py" script which we already created and it is invoked on window initialization.
+In order to set up the controls in the window we will use "omc_dialog_control" tool, which is located inside "Support" folder. We obtain the location from env variable exported for us by OMC engine:
+`omc_support_path = os.environ.get("OMC_OMC_SUPPORT_PATH")`<br>
+And construct:
+`dialog_tool = os.path.join(omc_support_path, "omc_dialog_control")`<br>
+We will also need:
+`dlg_guid = os.environ.get("OMC_NIB_DLG_GUID")`<br>
+
+This allows us set up the dialog controls by sending the information to the window with omc_dialog_control. This is cross-process communication because the handler script is running in a separate process from the applet code with the window.
+See more information at: [omc_dialog_control--help](https://github.com/abra-code/OMC/blob/master/omc_dialog_control--help.md)
+Finally the multiple elements come together:
+- dlg_guid uniquely identifies the window instance we are sending the message to
+- "1" is the control we are targeting (as we set the Table View "tag" in Xcode)
+- "omc_table_set_columns" and "omc_table_set_column_widths" are special instructions to set up the table column titles and widths
+
+```
+subprocess.run([dialog_tool, dlg_guid, "1", "omc_table_set_columns", "Time", "📁", "🚩", "Path"])
+subprocess.run([dialog_tool, dlg_guid, "1", "omc_table_set_column_widths", "120", "20", "20", "580"])
+
+```
+
+If we run our applet at this point, the table should look much better with all columns set up but still empty.
+The last piece of the puzzle is to populate the rows. OMC expects tab-separated text to be sent to the table view, which gets parsed, split and assigned to proper columns.
+We add row population to event.sh, instead of echoing the text to a stdout:
+```
+event_row="${timestamp}\t${watch_object}\t${watch_event_type}\t${watch_src_path}\t${watch_dest_path}"
+echo "${event_row}" | "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_add_rows_from_stdin
+```
+Running Watchodg.app should now add rows to the table view on each registered file system event. As a test, monitoring your `~Library` should provide a lot of frequent file events to populate your table, especially quite very "Preferences" folder, where plists get deleted and re-created (plist files are rarely "edited" but rather mutated in-memory and written back to a new file).
+
