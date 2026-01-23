@@ -18,6 +18,8 @@ These excluded files are NOT present in the repo but are created locally when fo
 
 Watchdog.icon was created using [Icon Composer.app](https://developer.apple.com/icon-composer/) and placed in `~/git/WatchdogApp/Icon/`
 
+Download the latest [OMC release](https://github.com/abra-code/OMC/releases). You will need OMCPythonApplet.app from there.
+
 We create a new applet by using `~/git/OMC/build_applet.sh` and pointing to OMCPythonApplet.app template.<br>
 `build_applet.sh` requires Xcode.app or Xcode command line tool installation. It should prompt for it if not present on your Mac.
 
@@ -99,7 +101,7 @@ In order to start `watchmedo` inside Watchdog.app we need to create a command de
 We rename template "Welcome" command to "Watchdog", which will be our primary command group. The first command in the group has no COMMAND_ID and with `EXECUTION_MODE=exe_script_file` OMC engine will look for "Resources/Scripts/Watchdog.main.sh" to execute.<br>
 We choose the following settings for the main command:<br>
 `ACTIVATION_MODE=act_folder` - we only process directories<br>
-`ENVIRONMENT_VARIABLES={OMC_OBJ_PATH=''}` - we tell the OMC engine the script always needs object path (object being directory in our case)<br>
+`ENVIRONMENT_VARIABLES={OMC_OBJ_PATH=''}` - we tell the OMC engine the script always needs object path (object being directory in our case). This step is not needed in OMC 4.4 because act_folder implies OMC_OBJ_PATH is required.<br>
 With these 2 settings for the main command, the applet behavior is as follows:
 - when launched without any folder, applet prompts to select a folder
 - when "Watchdog" command is selected from "Commands" menu, it asks to select a folder
@@ -226,11 +228,11 @@ PYTHONPYCACHEPREFIX      = /tmp/Pyc
 Double-clicking `WatchdogMonitor.nib` opens it for editing in Xcode.
 The window is empty with no controls in it except the content view. Xcode experience of editing nibs is not great by default. You need to show the inspectors under View -> Inspectors -> Attributes.<br>
 Now, the nib editing window should have the left pane with view hierarchy (aka document outline), central pane with window rendering and right pane with inspectors.
-You add new elements to currently focused view by clicking the [+] button at the bottom of central pane (aka "Show Library"). A window pops up with choices of elements. Find "Table View". Table view is inserted inside a wrapping Scroll View. In sizing inspector you will want to set its auto-sizing rules.<br>
+You add new elements to currently focused view by clicking the [+] button at the bottom of central pane (aka "Show Library"). A window pops up with choices of elements. Find "Table View". Table view is inserted inside a wrapping Scroll View. In sizing inspector you will want to set the scroll view auto-sizing rules.<br>
 Digging through the view hierarchy in the left pane when you select the actual embedded Table View you need to make changes in the inspectors. In "Identity" inspector you should change "Class" from NSTableView to OMCTableView. This adds support for OMC engine features in the table. Switching to "Attributes" inspector, you need to change the "Content Mode" from "View Based" to "Cell Based" because this is what OMC engine supports. Last, but not least you need to change the view "Tag" from 0 to 1. This is the important part. This control now has the identifier = 1 and can be found and manipulated by OMC by its identifier. <br>
 There are other settings you may want to apply and make some tweaks for the appearance of the table and its cells. At this point we don't change the number of columns or name them - this will be done in the code soon.
 
-With modification we can start the applet again and see that the table is displayed but it is empty and is not set up. The setup is going to happen in "watchdog.monitor.init.py" script which we already created and it is invoked on window initialization.
+With this addition we can start the applet again and see that the table is displayed but it is empty and is not set up. The setup is going to happen in "watchdog.monitor.init.py" script which we already created and it is invoked on window initialization.
 In order to set up the controls in the window we will use "omc_dialog_control" tool, which is located inside "Support" folder. We obtain the location from env variable exported for us by OMC engine:
 `omc_support_path = os.environ.get("OMC_OMC_SUPPORT_PATH")`<br>
 And construct:
@@ -238,8 +240,8 @@ And construct:
 We will also need:
 `dlg_guid = os.environ.get("OMC_NIB_DLG_GUID")`<br>
 
-This allows us set up the dialog controls by sending the information to the window with omc_dialog_control. This is cross-process communication because the handler script is running in a separate process from the applet code with the window.
-See more information at: [omc_dialog_control--help](https://github.com/abra-code/OMC/blob/master/omc_dialog_control--help.md)
+This allows us set up the dialog controls by sending the information to the window via `omc_dialog_control` tool. This is cross-process communication because the handler script is running in a separate process from the applet code with the window.
+See more information at: [omc_dialog_control--help](https://github.com/abra-code/OMC/blob/master/omc_dialog_control--help.md).<br>
 Finally the multiple elements come together:
 - dlg_guid uniquely identifies the window instance we are sending the message to
 - "1" is the control we are targeting (as we set the Table View "tag" in Xcode)
@@ -258,5 +260,5 @@ We add row population to event.sh, instead of echoing the text to a stdout:
 event_row="${timestamp}\t${watch_object}\t${watch_event_type}\t${watch_src_path}\t${watch_dest_path}"
 echo "${event_row}" | "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_add_rows_from_stdin
 ```
-Running Watchodg.app should now add rows to the table view on each registered file system event. As a test, monitoring your `~Library` should provide a lot of frequent file events to populate your table, especially quite very "Preferences" folder, where plists get deleted and re-created (plist files are rarely "edited" but rather mutated in-memory and written back to a new file).
+Running Watchodg.app should now add rows to the table view on each registered file system event. As a test, monitoring your `~Library` should provide a lot of frequent file events to populate your table, especially quite active "Preferences" folder, where plists get deleted and re-created (plist files are rarely "edited" but rather mutated in-memory and written back to a new file).
 
