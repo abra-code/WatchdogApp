@@ -16,10 +16,11 @@ print(f"dlg_guid: {dlg_guid}")
 
 if omc_support_path and dlg_guid:
     dialog_tool = os.path.join(omc_support_path, "omc_dialog_control")
+    event_list_table_id = "1"
     print(f"dialog_tool: {dialog_tool}")
-    print("running omc_table_set_columns for table id 1")
-    subprocess.run([dialog_tool, dlg_guid, "1", "omc_table_set_columns", "Time", "📁", "🚩", "Path"])
+    print(f"running omc_table_set_columns for table id {event_list_table_id}")
+    subprocess.run([dialog_tool, dlg_guid, event_list_table_id, "omc_table_set_columns", "Time", "📁", "🚩", "Path"])
     print("running omc_table_set_column_widths for table id 1")
-    subprocess.run([dialog_tool, dlg_guid, "1", "omc_table_set_column_widths", "120", "20", "20", "580"])
+    subprocess.run([dialog_tool, dlg_guid, event_list_table_id, "omc_table_set_column_widths", "190", "20", "20", "580"])
 else:
     print("Error: Required environment variables are not set.")
