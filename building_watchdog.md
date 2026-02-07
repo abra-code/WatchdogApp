@@ -661,3 +661,9 @@ PYTHON_BIN="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/"
 ```
 
 
+### Step 7: Removing unused Python components to reduce app bundle size
+
+`thin_watchdog.sh` can be run to remove unused Python components within `Watchdog.app/Contents/Library/Python/`
+The script depends on `thin_python_distribution.sh` from "Python-Embedding" at https://github.com/abra-code/Python-Embedding
+
+After we remove unused modules, the embedded universal binary Python distribution size is reduced from ~60MB to ~28MB. Potentially more modules could be removed but the remaining standard Python components are entangled with other core components and at some point it may break. A better algorithm with complete app testing would have to be devised to reduce the size even further and seal the bundle.
