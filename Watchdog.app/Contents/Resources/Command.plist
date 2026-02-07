@@ -11,13 +11,6 @@
 			<string>exe_script_file</string>
 			<key>ACTIVATION_MODE</key>
 			<string>act_folder</string>
-			<key>OUTPUT_WINDOW_SETTINGS</key>
-			<dict>
-				<key>WINDOW_TYPE</key>
-				<string>global_floating</string>
-				<key>WINDOW_POSITION</key>
-				<string>cascade</string>
-			</dict>
 			<key>NIB_DIALOG</key>
 			<dict>
 				<key>NIB_NAME</key>
@@ -32,7 +25,7 @@
 			<key>REQUIRED_MAC_OS_MIN_VERSION</key>
 			<string>11.0</string>
 			<key>REQUIRED_OMC_VERSION</key>
-			<string>4.4</string>
+			<string>4.4.1</string>
 		</dict>
 		<dict>
 			<key>NAME</key>
@@ -54,11 +47,124 @@
 			<key>NAME</key>
 			<string>Watchdog</string>
 			<key>COMMAND_ID</key>
+			<string>watchdog.monitor.start</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.monitor.stop</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.monitor.restart</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
 			<string>app.will.terminate</string>
 			<key>EXECUTION_MODE</key>
 			<string>exe_script_file</string>
 			<key>WAIT_FOR_TASK_COMPLETION</key>
 			<true/>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.reveal.in.finder</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.file.info</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file_with_output_window</string>
+			<key>OUTPUT_WINDOW_SETTINGS</key>
+			<dict>
+				<key>TEXT_FONT</key>
+				<string>Monaco</string>
+				<key>TEXT_SIZE</key>
+				<integer>11</integer>
+				<key>WINDOW_ALPHA</key>
+				<real>1</real>
+				<key>WINDOW_CLOSE_FADE_OUT</key>
+				<true/>
+				<key>WINDOW_HEIGHT</key>
+				<integer>300</integer>
+				<key>WINDOW_OPEN_FADE_IN</key>
+				<true/>
+				<key>WINDOW_POSITION</key>
+				<string>alert</string>
+				<key>WINDOW_TYPE</key>
+				<string>regular</string>
+				<key>WINDOW_WIDTH</key>
+				<integer>900</integer>
+			</dict>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.copy.event</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.monitor.selection.change</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.export.events</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
+			<key>SAVE_AS_DIALOG</key>
+			<dict>
+				<key>MESSAGE</key>
+				<string>Save Event Log As...</string>
+				<key>DEFAULT_FILE_NAME</key>
+				<array>
+					<string>watchdog_events_</string>
+					<string>__OBJ_NAME__</string>
+					<string>.tsv</string>
+				</array>
+				<key>DEFAULT_LOCATION</key>
+				<array>
+					<string>~</string>
+				</array>
+			</dict>
+			<key>ENVIRONMENT_VARIABLES</key>
+			<dict>
+				<key>OMC_NIB_TABLE_1_COLUMN_0_ALL_ROWS</key>
+				<string></string>
+			</dict>
+		</dict>
+		<dict>
+			<key>NAME</key>
+			<string>Watchdog</string>
+			<key>COMMAND_ID</key>
+			<string>watchdog.clear.event.list</string>
+			<key>EXECUTION_MODE</key>
+			<string>exe_script_file</string>
 		</dict>
 	</array>
 	<key>VERSION</key>

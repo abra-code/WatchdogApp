@@ -31,7 +31,7 @@ elif [ "${watch_event_type}" = "deleted" ]; then
 fi
 
 if [ -z "${event_row}" ]; then
-    event_row="${timestamp}\t${watch_object}\t${watch_event_type}\t${watch_src_path}\t${watch_dest_path}"
+    event_row="${timestamp}\t${watch_object}\t${watch_event_type}\t${watch_src_path}"
 fi
 
 # echo "${event_row}"

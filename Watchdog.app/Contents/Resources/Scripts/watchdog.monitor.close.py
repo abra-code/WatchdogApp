@@ -1,9 +1,29 @@
-import sys
+#!/usr/bin/env python3
+
 import os
+import subprocess
+import sys
 
-script_path = sys.argv[0]
-script_name = os.path.basename(script_path)
-print(script_name)
+script_name = os.path.basename(sys.argv[0])
+print(f"[{script_name}]")
 
-for name in sorted(os.environ):
-    print(f"{name: <32} = {os.environ[name]}")
+watchmedo = os.path.join(
+    os.environ.get("OMC_APP_BUNDLE_PATH", ""),
+    "Contents",
+    "Library",
+    "Python",
+    "bin",
+    "watchmedo",
+)
+
+obj_path = os.environ.get("OMC_OBJ_PATH", "")
+
+subprocess.run(
+    [
+        "/usr/bin/pkill",
+        "-U",
+        os.environ.get("USER", ""),
+        "-f",
+        f".* {watchmedo} shell-command .* {obj_path}$",
+    ]
+)

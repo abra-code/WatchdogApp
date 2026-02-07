@@ -55,7 +55,7 @@ export PYTHONPYCACHEPREFIX=/tmp/Pyc
 If you are on Apple Silicon Mac, run the following command to build and install Universal "watchdog" module:
 ```
 export ARCHFLAGS="-arch x86_64 -arch arm64"
-arch -x86_64 ./python3 -m pip install watchdog --no-binary=watchdog
+arch -x86_64 ./python3 -m pip install --verbose --force-reinstall --no-binary :all: watchdog
 
 ```
 Note: `arch -x86_64` executes the binary under Rosetta emulation. This builds universal binaries with ARCHFLAGS as above on my Apple Silicon Mac. When running without `arch -x86_64` I ended up with single arm64 architecture for some reason. If the build succeeds you will see 'watchmedo' tool in Python/bin.
@@ -261,4 +261,403 @@ event_row="${timestamp}\t${watch_object}\t${watch_event_type}\t${watch_src_path}
 echo "${event_row}" | "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_add_rows_from_stdin
 ```
 Running Watchodg.app should now add rows to the table view on each registered file system event. As a test, monitoring your `~Library` should provide a lot of frequent file events to populate your table, especially quite active "Preferences" folder, where plists get deleted and re-created (plist files are rarely "edited" but rather mutated in-memory and written back to a new file).
+
+
+### Step 6: Adding Start/Stop Controls and Filtering
+
+The basic implementation starts monitoring and outputting events in the table view. Now let's add explicit start/stop buttons, provide GUI options for watchmedo arguments other functionality.
+
+
+**New Dialog Controls** (WatchdogMonitor.nib)
+| Control | Tag | Purpose |
+|---------|-----|---------|
+| Checkbox | 2 | "Observe files in subdirectories" - toggles recursive monitoring |
+| Checkbox | 3 | "Include directory events" - shows directory create/delete/modify events |
+| TextField | 4 | "Watch files matching:" - glob pattern filter (e.g., `*.txt;*.rtf`) |
+| TextField | 5 | "Ignore files matching:" - exclusion pattern (e.g., `*.tmp;*.temp`) |
+| Button | 6 | ▶️ Start monitoring |
+| Button | 7 | ⏹️ Stop monitoring |
+| Button | 8 | 🔍 Reveal in Finder |
+| Button | 9 | ℹ️ File info |
+| Button | 10 | 📋 Copy selected rows |
+| Button | - | 🗑️ Clear events list |
+| Button | - | ⬇️ Export events to TSV |
+
+**Table Selection Handling:**
+Added `selectionCommandID="watchdog.monitor.selection.change"` to OMCTableView "User Defined Runtime Attributes". This triggers a command when row selection changes, enabling or disabling the selection-dependent buttons (Reveal, Info, Copy).
+
+**New Commands in Command.plist:**
+
+```
+watchdog.monitor.start    - Begin monitoring with current settings
+watchdog.monitor.stop     - Stop running monitor
+watchdog.monitor.restart  - Restart monitor (triggered by checkbox changes)
+watchdog.reveal.in.finder - Reveal selected file in Finder
+watchdog.file.info        - Display select file(s) information in output window
+watchdog.copy.event       - Copy selected row(s) to clipboard
+watchdog.monitor.selection.change - Handle table selection changes
+watchdog.export.events    - Export event log to TSV file
+watchdog.clear.event.list - Clear all events from table
+```
+
+**Export Dialog Configuration:**
+The export command uses `SAVE_AS_DIALOG` to present a save panel:
+```
+<key>SAVE_AS_DIALOG</key>
+<dict>
+    <key>MESSAGE</key>
+    <string>Save Event Log As...</string>
+    <key>DEFAULT_FILE_NAME</key>
+    <array>
+        <string>watchdog_events_</string>
+        <string>__OBJ_NAME__</string>
+        <string>.tsv</string>
+    </array>
+    <key>DEFAULT_LOCATION</key>
+    <array>
+        <string>~</string>
+    </array>
+</dict>
+```
+The `OMC_NIB_TABLE_1_COLUMN_0_ALL_ROWS` environment variable provides tab-separated data for all rows.
+
+**Script Organization Changes:**
+
+The main startup script `Watchdog.main.sh` is simplified just to verify we got a directory from context (file dropped on the app or opened from navigation dialog).
+
+**Auto-Start on Window Open:**
+Updated `watchdog.monitor.init.py` to automatically start monitoring when the window opens:
+```python
+next_command_tool = os.path.join(omc_support_path, "omc_next_command")
+current_command_guid = os.environ.get("OMC_CURRENT_COMMAND_GUID")
+subprocess.run([next_command_tool, current_command_guid, "watchdog.monitor.start"])
+```
+
+**Termination Handler Improvement:**
+Updated `app.will.terminate.sh` to use more targeted process killing:
+```
+PYTHON_BIN="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/"
+/usr/bin/pkill -U "${USER}" -f "${PYTHON_BIN}.*"
+```
+
+Using `-U ${USER}` ensures we only kill our own Python processes, avoiding potential issues with other users' processes.
+
+**Shell vs Python Implementation:**
+
+All scripts can be written in either shell or Python. The original implementations used shell scripts (`.sh`), but then they were translated to Python (`.py`). OMC executes scripts by matching the COMMAND_ID to a file without extension, so the working implementation can be either `.sh` or `.py`. The `.sh` versions are preserved in `Scripts-shell/` directory for reference.
+
+
+**Reading UI Control Values:**
+
+OMC exports control values as environment variables when subcommands are triggered from dialog controls. The format is:
+- `$OMC_NIB_DIALOG_CONTROL_N_VALUE` for single-value controls (text fields, checkboxes)
+- `$OMC_NIB_TABLE_NNN_COLUMN_MMM_VALUE` for table cell values
+
+**Reading Control Values in Shell:**
+```bash
+# TextField with tag 4: watch pattern
+WATCH_PATTERN="${OMC_NIB_DIALOG_CONTROL_4_VALUE}"
+
+# TextField with tag 5: ignore pattern
+IGNORE_PATTERN="${OMC_NIB_DIALOG_CONTROL_5_VALUE}"
+
+# Checkbox with tag 2: recursive mode (1=on, 0=off)
+RECURSIVE="${OMC_NIB_DIALOG_CONTROL_2_VALUE}"
+
+# Checkbox with tag 3: include directories (1=on, 0=off)
+INCLUDE_DIRECTORIES="${OMC_NIB_DIALOG_CONTROL_3_VALUE}"
+```
+
+**Reading Control Values in Python:**
+```python
+watch_pattern = os.environ.get("OMC_NIB_DIALOG_CONTROL_4_VALUE", "")
+ignore_pattern = os.environ.get("OMC_NIB_DIALOG_CONTROL_5_VALUE", "")
+recursive = os.environ.get("OMC_NIB_DIALOG_CONTROL_2_VALUE", "0") == "1"
+include_directories = os.environ.get("OMC_NIB_DIALOG_CONTROL_3_VALUE", "0") == "1"
+```
+
+**Selection-Dependent Actions:**
+
+The `watchdog.monitor.selection.change` command runs whenever the table selection changes. OMC exports selected rows via environment variables in the format `$OMC_NIB_TABLE_1_COLUMN_N_VALUE` for column values.
+
+**Column Indexing:**
+- OMC table columns are 1-based (column 1, 2, 3, 4)
+- Column 0 is special: it represents all columns combined into a single tab-separated string
+- Any column can be used for detecting selection
+
+---
+
+**Code Fragments:**
+For reference, here are some distilled code fragments used in action handlers illustrating the interaction with elements in GUI dialog.
+
+
+**watchdog.monitor.selection.change**
+Python:
+```python
+reveal_button_id = "8"
+info_button_id = "9"
+copy_button_id = "10"
+
+dialog_tool = os.path.join(os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "omc_dialog_control")
+dlg_guid = os.environ.get("OMC_NIB_DLG_GUID", "")
+
+has_selection = os.environ.get("OMC_NIB_TABLE_1_COLUMN_1_VALUE", "") != ""
+enable_disable = "omc_enable" if has_selection else "omc_disable"
+
+subprocess.run([dialog_tool, dlg_guid, reveal_button_id, enable_disable])
+subprocess.run([dialog_tool, dlg_guid, info_button_id, enable_disable])
+subprocess.run([dialog_tool, dlg_guid, copy_button_id, enable_disable])
+```
+
+Shell:
+```bash
+reveal_button_id="8"
+info_button_id="9"
+copy_button_id="10"
+
+dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+
+enable_disable="omc_disable"
+if [ -n "${OMC_NIB_TABLE_1_COLUMN_1_VALUE}" ]; then
+    enable_disable="omc_enable"
+fi
+
+"${dialog_tool}" "${OMC_NIB_DLG_GUID}" "${reveal_button_id}" "${enable_disable}"
+"${dialog_tool}" "${OMC_NIB_DLG_GUID}" "${info_button_id}" "${enable_disable}"
+"${dialog_tool}" "${OMC_NIB_DLG_GUID}" "${copy_button_id}" "${enable_disable}"
+```
+
+---
+
+**watchdog.monitor.start**
+
+Python:
+```python
+obj_path = os.environ.get("OMC_OBJ_PATH", "")
+python = os.path.join(os.environ.get("OMC_APP_BUNDLE_PATH", ""), "Contents/Library/Python/bin/python3")
+watchmedo = os.path.join(os.environ.get("OMC_APP_BUNDLE_PATH", ""), "Contents/Library/Python/bin/watchmedo")
+event_sh = os.path.join(os.environ.get("OMC_APP_BUNDLE_PATH", ""), "Contents/Resources/Scripts/event.sh")
+
+is_recursive = os.environ.get("OMC_NIB_DIALOG_CONTROL_2_VALUE", "") == "1"
+is_include_dirs = os.environ.get("OMC_NIB_DIALOG_CONTROL_3_VALUE", "") == "1"
+watch_recursive = "--recursive" if is_recursive else ""
+watch_ignore_dirs = "" if is_include_dirs else "--ignore-directories"
+
+pattern_list = os.environ.get("OMC_NIB_DIALOG_CONTROL_4_VALUE", "")
+watch_patterns = f"--patterns={pattern_list}" if pattern_list else ""
+ignore_pattern_list = os.environ.get("OMC_NIB_DIALOG_CONTROL_5_VALUE", "")
+watch_ignore_patterns = f"--ignore-patterns={ignore_pattern_list}" if ignore_pattern_list else ""
+
+dialog_tool = os.path.join(os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "omc_dialog_control")
+dlg_guid = os.environ.get("OMC_NIB_DLG_GUID", "")
+
+subprocess.run([dialog_tool, dlg_guid, "1", "omc_table_remove_all_rows"])
+
+command_str = f"source \"{event_sh}\" \"$watch_object\" \"$watch_event_type\" \"$watch_src_path\" \"$watch_dest_path\""
+args = [python, watchmedo, "shell-command", watch_recursive, watch_ignore_dirs,
+        watch_patterns, watch_ignore_patterns, "--wait", "--command", command_str, obj_path]
+args = [arg for arg in args if arg]
+
+process = subprocess.Popen(args)
+print(f"watchmedo started with PID: {process.pid}")
+
+subprocess.run([dialog_tool, dlg_guid, "6", "omc_disable"])
+subprocess.run([dialog_tool, dlg_guid, "7", "omc_enable"])
+```
+
+Shell:
+```bash
+DIR_TO_WATCH="${OMC_OBJ_PATH}"
+EVENT_SH="${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/event.sh"
+
+IS_RECURSIVE="${OMC_NIB_DIALOG_CONTROL_2_VALUE}"
+WATCH_RECURSIVE=$([ "${IS_RECURSIVE}" = "1" ] && echo "--recursive" || echo "")
+
+IS_INCLUDE_DIRS="${OMC_NIB_DIALOG_CONTROL_3_VALUE}"
+WATCH_IGNORE_DIRS=$([ "${IS_INCLUDE_DIRS}" != "1" ] && echo "--ignore-directories" || echo "")
+
+PATTERN_LIST="${OMC_NIB_DIALOG_CONTROL_4_VALUE}"
+WATCH_PATTERNS=$([ -n "${PATTERN_LIST}" ] && echo "--patterns=${PATTERN_LIST}" || echo "")
+
+IGNORE_PATTERN_LIST="${OMC_NIB_DIALOG_CONTROL_5_VALUE}"
+WATCH_IGNORE_PATTERNS=$([ -n "${IGNORE_PATTERN_LIST}" ] && echo "--ignore-patterns=${IGNORE_PATTERN_LIST}" || echo "")
+
+dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+"$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_remove_all_rows
+
+"$PYTHON" "$WATCHMEDO" shell-command \
+    ${WATCH_RECURSIVE} ${WATCH_IGNORE_DIRS} ${WATCH_PATTERNS} ${WATCH_IGNORE_PATTERNS} \
+    --wait \
+    --command='source "${EVENT_SH}" "${watch_object}" "${watch_event_type}" "${watch_src_path}" "${watch_dest_path}"' \
+    "${DIR_TO_WATCH}" &
+```
+---
+
+**watchdog.monitor.stop**
+
+Shell:
+```bash
+WATCHMEDO="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/watchmedo"
+/usr/bin/pkill -U "${USER}" -f ".* ${WATCHMEDO} shell-command .* ${OMC_OBJ_PATH}$"
+
+dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+"$dialog_tool" "$OMC_NIB_DLG_GUID" "6" omc_enable
+"$dialog_tool" "$OMC_NIB_DLG_GUID" "7" omc_disable
+```
+
+---
+
+**watchdog.monitor.restart**
+
+Shell:
+```bash
+WATCHMEDO="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/watchmedo"
+RUNNING_PID=$(/usr/bin/pgrep -U "${USER}" -f ".* ${WATCHMEDO} shell-command .* ${OMC_OBJ_PATH}$")
+
+if [ -n "${RUNNING_PID}" ]; then
+    source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/watchdog.monitor.stop.sh"
+    source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/watchdog.monitor.start.sh"
+fi
+```
+---
+
+**watchdog.reveal.in.finder**
+
+Python:
+```python
+file_event_paths = os.environ.get("OMC_NIB_TABLE_1_COLUMN_4_VALUE", "")
+file_revealed = False
+
+for one_path in file_event_paths.strip().split('\n'):
+    one_path = one_path.strip()
+    if not one_path:
+        continue
+    if os.path.exists(one_path):
+        subprocess.run(["/usr/bin/open", "-R", one_path])
+        file_revealed = True
+        break
+
+if not file_revealed:
+    alert_tool = os.path.join(os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "alert")
+    subprocess.run([alert_tool, "--level", "caution", "--title", "Watchdog", "File does not exist"])
+```
+
+Shell:
+```bash
+FILE_EVENT_PATHS="${OMC_NIB_TABLE_1_COLUMN_4_VALUE}"
+
+FILE_REVEALED=0
+while IFS= read -r one_path; do
+    if [ -e "${one_path}" ]; then
+        /usr/bin/open -R "${one_path}"
+        FILE_REVEALED=1
+        break
+    fi
+done <<< "$FILE_EVENT_PATHS"
+
+if [ "${FILE_REVEALED}" = 0 ]; then
+    alert="$OMC_OMC_SUPPORT_PATH/alert"
+    "${alert}" --level caution --title "Watchdog" "File does not exist"
+fi
+```
+---
+
+**watchdog.file.info**
+
+Python:
+```python
+file_event_paths = os.environ.get("OMC_NIB_TABLE_1_COLUMN_4_VALUE", "")
+
+for one_path in file_event_paths.strip().split('\n'):
+    one_path = one_path.strip()
+    if not one_path:
+        continue
+
+    if os.path.exists(one_path):
+        result = subprocess.run(["/usr/bin/stat", "-x", one_path], capture_output=True, text=True)
+        print(result.stdout, end="")
+    else:
+        print(f'  File: "{one_path}"')
+        print("  Status: file does not exist")
+    print("---------------------------------")
+```
+
+Shell:
+```bash
+FILE_EVENT_PATHS="${OMC_NIB_TABLE_1_COLUMN_4_VALUE}"
+
+while IFS= read -r one_path; do
+    if [ -e "${one_path}" ]; then
+        /usr/bin/stat -x "${one_path}"
+    else
+        echo "  File: \"${one_path}\""
+        echo "  Status: file does not exist"
+    fi
+    echo "---------------------------------"
+done <<< "$FILE_EVENT_PATHS"
+```
+---
+
+**watchdog.copy.event**
+
+Python:
+```python
+env = os.environ.copy()
+env["LANG"] = "en_US.UTF-8"
+selected_rows_text = os.environ.get("OMC_NIB_TABLE_1_COLUMN_0_VALUE", "")
+subprocess.run(["/usr/bin/pbcopy", "-pboard", "general"], input=selected_rows_text, encoding="utf-8", env=env)
+```
+
+Shell:
+```bash
+export LANG="en_US.UTF-8"
+echo "${OMC_NIB_TABLE_1_COLUMN_0_VALUE}" | /usr/bin/pbcopy -pboard general
+```
+---
+
+**watchdog.clear.event.list**
+
+Python:
+```python
+dialog_tool = os.path.join(os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "omc_dialog_control")
+subprocess.run([dialog_tool, os.environ.get("OMC_NIB_DLG_GUID", ""), "1", "omc_table_remove_all_rows"])
+```
+
+Shell:
+```bash
+dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
+"$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_remove_all_rows
+```
+---
+
+**watchdog.export.events**
+
+Python:
+```python
+all_rows_text = os.environ.get("OMC_NIB_TABLE_1_COLUMN_0_ALL_ROWS", "")
+with open(os.environ.get("OMC_DLG_SAVE_AS_PATH", ""), "w", encoding="utf-8") as f:
+    f.write(all_rows_text)
+```
+
+
+Shell:
+```bash
+echo "${OMC_NIB_TABLE_1_COLUMN_0_ALL_ROWS}" > "${OMC_DLG_SAVE_AS_PATH}"
+```
+---
+
+**app.will.terminate**
+
+Python:
+```python
+python_bin = os.path.join(os.environ.get("OMC_APP_BUNDLE_PATH", ""), "Contents", "Library", "Python", "bin", "")
+subprocess.run(["/usr/bin/pkill", "-U", os.environ.get("USER", ""), "-f", f"{python_bin}.*"])
+```
+
+Shell:
+```bash
+PYTHON_BIN="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/"
+/usr/bin/pkill -U "${USER}" -f "${PYTHON_BIN}.*"
+```
+
 

@@ -3,6 +3,7 @@
     <dependencies>
         <deployment version="110000" identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <capability name="Image references" minToolsVersion="12.0"/>
         <capability name="System colors introduced in macOS 10.14" minToolsVersion="10.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -13,21 +14,22 @@
         <window title="Watchdog" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="196" y="654" width="800" height="400"/>
+            <rect key="contentRect" x="196" y="654" width="800" height="600"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1728" height="1084"/>
+            <value key="minSize" type="size" width="800" height="400"/>
             <view key="contentView" wantsLayer="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="800" height="400"/>
+                <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="17" horizontalPageScroll="10" verticalLineScroll="17" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="52D-fe-BAj">
-                        <rect key="frame" x="20" y="20" width="760" height="360"/>
+                        <rect key="frame" x="20" y="37" width="760" height="477"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="85I-L4-Xc2">
-                            <rect key="frame" x="1" y="1" width="758" height="358"/>
+                            <rect key="frame" x="1" y="1" width="758" height="475"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <tableView verticalHuggingPriority="750" tag="1" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" tableStyle="plain" alternatingRowBackgroundColors="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" rowSizeStyle="small" headerView="ajj-gp-Dqj" id="wPQ-f9-Ky0" customClass="OMCTableView">
-                                    <rect key="frame" x="0.0" y="0.0" width="758" height="330"/>
+                                <tableView focusRingType="none" verticalHuggingPriority="750" tag="1" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" tableStyle="plain" alternatingRowBackgroundColors="YES" columnReordering="NO" autosaveColumns="NO" rowSizeStyle="small" headerView="ajj-gp-Dqj" id="wPQ-f9-Ky0" customClass="OMCTableView">
+                                    <rect key="frame" x="0.0" y="0.0" width="758" height="447"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <size key="intercellSpacing" width="17" height="0.0"/>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -62,9 +64,15 @@
                                     <userDefinedRuntimeAttributes>
                                         <userDefinedRuntimeAttribute type="string" keyPath="combinedSelectionSeparator">
                                             <string key="value" base64-UTF8="YES">
+Cg
+</string>
+                                        </userDefinedRuntimeAttribute>
+                                        <userDefinedRuntimeAttribute type="string" keyPath="multipleColumnSeparator">
+                                            <string key="value" base64-UTF8="YES">
 CQ
 </string>
                                         </userDefinedRuntimeAttribute>
+                                        <userDefinedRuntimeAttribute type="string" keyPath="selectionCommandID" value="watchdog.monitor.selection.change"/>
                                     </userDefinedRuntimeAttributes>
                                 </tableView>
                             </subviews>
@@ -82,9 +90,202 @@ CQ
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
                     </scrollView>
+                    <button toolTip="Recursive - show file events in all subdirectories" tag="2" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tCW-PU-xMU" customClass="OMCButton">
+                        <rect key="frame" x="20" y="564" width="207" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Observe files in subdirectories" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="wqh-iT-4bm">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.monitor.restart"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
+                    <button toolTip="Record events for directories in addition to files" tag="3" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="DCV-zn-AbE" customClass="OMCButton">
+                        <rect key="frame" x="20" y="532" width="168" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="check" title="Include directory events" bezelStyle="regularSquare" imagePosition="left" inset="2" id="Np8-Qj-C3A">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.monitor.restart"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" tag="4" translatesAutoresizingMaskIntoConstraints="NO" id="ydC-tf-bHh" customClass="OMCTextField">
+                        <rect key="frame" x="387" y="560" width="289" height="24"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Glob pattern, e.g.: *.txt;*.rtf" drawsBackground="YES" id="M6q-Yp-In8">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bSh-1C-8vH">
+                        <rect key="frame" x="246" y="564" width="135" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Watch files matching:" id="NBq-wi-DF5">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" fixedFrame="YES" tag="5" translatesAutoresizingMaskIntoConstraints="NO" id="XET-pF-nIL" customClass="OMCTextField">
+                        <rect key="frame" x="387" y="528" width="289" height="24"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Glob pattern, e.g.: *.tmp;*.temp" drawsBackground="YES" id="aZ0-EX-Wgg">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xf1-ue-btW">
+                        <rect key="frame" x="246" y="532" width="135" height="16"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" lineBreakMode="clipping" title="Ignore files matching:" id="ZWH-15-GiG">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <button toolTip="Start monitoring" tag="6" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VJ0-NN-CXh" customClass="OMCButton">
+                        <rect key="frame" x="750" y="539" width="30" height="30"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="p1T-Kq-WFy">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <imageReference key="image" image="play.fill" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                <hierarchicalColors>
+                                    <color name="systemGreenColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                </hierarchicalColors>
+                            </imageReference>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.monitor.start"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
+                    <button toolTip="Stop monitoring" tag="7" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dBX-M8-gpl" customClass="OMCButton">
+                        <rect key="frame" x="712" y="539" width="30" height="30"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="1d7-fq-0jZ">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <imageReference key="image" image="stop.fill" catalog="system" symbolScale="large" renderingMode="hierarchical" variableValue="0.80000000000000004">
+                                <hierarchicalColors>
+                                    <color name="systemRedColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                </hierarchicalColors>
+                            </imageReference>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.monitor.stop"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
+                    <button toolTip="Clear events list" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mDa-Go-OWo" customClass="OMCButton">
+                        <rect key="frame" x="756" y="8" width="28.5" height="30"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="G6s-WM-4eV">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <imageReference key="image" image="trash" catalog="system" symbolScale="medium" renderingMode="hierarchical">
+                                <hierarchicalColors>
+                                    <color name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                </hierarchicalColors>
+                            </imageReference>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.clear.event.list"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
+                    <button toolTip="Export events to TSV file" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0gI-c8-eUV" customClass="OMCButton">
+                        <rect key="frame" x="727" y="8.5" width="31.5" height="30"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" state="on" imageScaling="proportionallyDown" inset="2" id="DnB-4w-n63">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <imageReference key="image" image="square.and.arrow.down" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                <hierarchicalColors>
+                                    <color name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                </hierarchicalColors>
+                            </imageReference>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.export.events"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
+                    <button toolTip="Reveal in Finder" tag="8" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5bE-fz-uZm" customClass="OMCButton">
+                        <rect key="frame" x="18" y="8" width="26" height="30"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" enabled="NO" state="on" imageScaling="proportionallyDown" inset="2" id="QDf-EM-fnN">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <imageReference key="image" image="finder" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                <hierarchicalColors>
+                                    <color name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                </hierarchicalColors>
+                            </imageReference>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.reveal.in.finder"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
+                    <button toolTip="Copy selected row(s)" tag="10" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4M1-Qs-wpU" customClass="OMCButton">
+                        <rect key="frame" x="72" y="5.5" width="24" height="36"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" enabled="NO" state="on" imageScaling="proportionallyDown" inset="2" id="5eW-XV-SNR">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <imageReference key="image" image="list.clipboard" catalog="system" symbolScale="medium" renderingMode="hierarchical">
+                                <hierarchicalColors>
+                                    <color name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                </hierarchicalColors>
+                            </imageReference>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.copy.event"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
+                    <button toolTip="File info" tag="9" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nfw-zI-NGN" customClass="OMCButton">
+                        <rect key="frame" x="46" y="8" width="26" height="30"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" enabled="NO" state="on" imageScaling="proportionallyDown" inset="2" id="2Ih-2d-a96">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <imageReference key="image" image="info.circle" catalog="system" symbolScale="large" renderingMode="hierarchical">
+                                <hierarchicalColors>
+                                    <color name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                </hierarchicalColors>
+                            </imageReference>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.file.info"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
                 </subviews>
             </view>
             <point key="canvasLocation" x="-223" y="-32"/>
         </window>
     </objects>
+    <resources>
+        <image name="finder" catalog="system" width="20" height="19"/>
+        <image name="info.circle" catalog="system" width="20" height="20"/>
+        <image name="list.clipboard" catalog="system" width="14" height="19"/>
+        <image name="play.fill" catalog="system" width="15" height="17"/>
+        <image name="square.and.arrow.down" catalog="system" width="19" height="22"/>
+        <image name="stop.fill" catalog="system" width="18" height="17"/>
+        <image name="trash" catalog="system" width="15" height="17"/>
+    </resources>
 </document>
