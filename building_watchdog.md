@@ -667,3 +667,48 @@ PYTHON_BIN="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/"
 The script depends on `thin_python_distribution.sh` from "Python-Embedding" at https://github.com/abra-code/Python-Embedding
 
 After we remove unused modules, the embedded universal binary Python distribution size is reduced from ~60MB to ~28MB. Potentially more modules could be removed but the remaining standard Python components are entangled with other core components and at some point it may break. A better algorithm with complete app testing would have to be devised to reduce the size even further and seal the bundle.
+
+
+### Step 8: Adding QuickLook support
+
+Adding QuickLook support for previewing selected files directly from the table view.
+
+**New Button in WatchdogMonitor.nib:**
+| Control | Tag | Purpose |
+|---------|-----|---------|
+| Button | 11 | 👁️ QuickLook preview |
+
+**New Command in Command.plist:**
+```
+watchdog.quicklook - Trigger QuickLook for selected file
+```
+
+**Implementation:**
+The QuickLook functionality uses macOS's `qlmanage` command-line tool to preview files:
+```python
+file_event_paths = os.environ.get("OMC_NIB_TABLE_1_COLUMN_4_VALUE", "")
+
+for one_path in file_event_paths.strip().split('\n'):
+    one_path = one_path.strip()
+    if not one_path:
+        continue
+    if os.path.exists(one_path):
+        subprocess.run(["/usr/bin/qlmanage", "-p", one_path])
+        break
+```
+
+Shell:
+```bash
+FILE_EVENT_PATHS="${OMC_NIB_TABLE_1_COLUMN_4_VALUE}"
+
+while IFS= read -r one_path; do
+    if [ -e "${one_path}" ]; then
+        /usr/bin/qlmanage -p "${one_path}"
+        break
+    fi
+done <<< "$FILE_EVENT_PATHS"
+```
+
+**Selection Handler Update:**
+The `watchdog.monitor.selection.change` command was updated to also enable/disable the QuickLook button (tag 11) alongside the existing Reveal, Info, and Copy buttons.
+
