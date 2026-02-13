@@ -112,7 +112,7 @@ CQ
                             <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.monitor.restart"/>
                         </userDefinedRuntimeAttributes>
                     </button>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" tag="4" translatesAutoresizingMaskIntoConstraints="NO" id="ydC-tf-bHh" customClass="OMCTextField">
+                    <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" tag="4" translatesAutoresizingMaskIntoConstraints="NO" id="ydC-tf-bHh" customClass="OMCTextField">
                         <rect key="frame" x="387" y="560" width="289" height="24"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Glob pattern, e.g.: *.txt;*.rtf" drawsBackground="YES" id="M6q-Yp-In8">
@@ -121,7 +121,7 @@ CQ
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bSh-1C-8vH">
+                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bSh-1C-8vH">
                         <rect key="frame" x="246" y="564" width="135" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="Watch files matching:" id="NBq-wi-DF5">
@@ -130,7 +130,7 @@ CQ
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" tag="5" translatesAutoresizingMaskIntoConstraints="NO" id="XET-pF-nIL" customClass="OMCTextField">
+                    <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" tag="5" translatesAutoresizingMaskIntoConstraints="NO" id="XET-pF-nIL" customClass="OMCTextField">
                         <rect key="frame" x="387" y="528" width="289" height="24"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" placeholderString="Glob pattern, e.g.: *.tmp;*.temp" drawsBackground="YES" id="aZ0-EX-Wgg">
@@ -139,7 +139,7 @@ CQ
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xf1-ue-btW">
+                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xf1-ue-btW">
                         <rect key="frame" x="246" y="532" width="135" height="16"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="Ignore files matching:" id="ZWH-15-GiG">
@@ -239,7 +239,7 @@ CQ
                         </userDefinedRuntimeAttributes>
                     </button>
                     <button toolTip="Copy selected row(s)" tag="10" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4M1-Qs-wpU" customClass="OMCButton">
-                        <rect key="frame" x="72" y="5.5" width="24" height="36"/>
+                        <rect key="frame" x="102" y="5.5" width="24" height="36"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" enabled="NO" state="on" imageScaling="proportionallyDown" inset="2" id="5eW-XV-SNR">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -257,7 +257,7 @@ CQ
                         </userDefinedRuntimeAttributes>
                     </button>
                     <button toolTip="File info" tag="9" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nfw-zI-NGN" customClass="OMCButton">
-                        <rect key="frame" x="46" y="8" width="26" height="30"/>
+                        <rect key="frame" x="75" y="7" width="26" height="30"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="only" alignment="center" lineBreakMode="truncatingTail" enabled="NO" state="on" imageScaling="proportionallyDown" inset="2" id="2Ih-2d-a96">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -274,12 +274,31 @@ CQ
                             <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.file.info"/>
                         </userDefinedRuntimeAttributes>
                     </button>
+                    <button toolTip="Preview selected file" tag="11" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="QMY-Tz-04g" customClass="OMCButton">
+                        <rect key="frame" x="45" y="7" width="28" height="30"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="smallSquare" bezelStyle="smallSquare" imagePosition="overlaps" alignment="center" lineBreakMode="truncatingTail" enabled="NO" state="on" imageScaling="proportionallyDown" inset="2" id="fvz-cr-bhB">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <imageReference key="image" image="NSQuickLookTemplate" symbolScale="medium" renderingMode="hierarchical">
+                                <hierarchicalColors>
+                                    <color name="labelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                    <color name="tertiaryLabelColor" catalog="System" colorSpace="catalog"/>
+                                </hierarchicalColors>
+                            </imageReference>
+                        </buttonCell>
+                        <userDefinedRuntimeAttributes>
+                            <userDefinedRuntimeAttribute type="string" keyPath="commandID" value="watchdog.quicklook"/>
+                        </userDefinedRuntimeAttributes>
+                    </button>
                 </subviews>
             </view>
             <point key="canvasLocation" x="-223" y="-32"/>
         </window>
     </objects>
     <resources>
+        <image name="NSQuickLookTemplate" width="21" height="13"/>
         <image name="finder" catalog="system" width="20" height="19"/>
         <image name="info.circle" catalog="system" width="20" height="20"/>
         <image name="list.clipboard" catalog="system" width="14" height="19"/>

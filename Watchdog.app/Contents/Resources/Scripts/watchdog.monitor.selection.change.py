@@ -10,6 +10,7 @@ print(f"[{script_name}]")
 reveal_button_id = "8"
 info_button_id = "9"
 copy_button_id = "10"
+quicklook_button_id = "11"
 
 dialog_tool = os.path.join(
     os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "omc_dialog_control"
@@ -31,3 +32,4 @@ enable_disable = "omc_enable" if has_selection else "omc_disable"
 subprocess.run([dialog_tool, dlg_guid, reveal_button_id, enable_disable])
 subprocess.run([dialog_tool, dlg_guid, info_button_id, enable_disable])
 subprocess.run([dialog_tool, dlg_guid, copy_button_id, enable_disable])
+subprocess.run([dialog_tool, dlg_guid, quicklook_button_id, enable_disable])
