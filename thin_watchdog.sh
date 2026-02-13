@@ -21,7 +21,7 @@ echo
 echo "Removing most unused modules..."
 "$THIN_PYTHON_SCRIPT" \
   "$PYTHON_DIR" \
-  ssl hashlib sqlite3 curses xml dbm decimal ctypes multiprocessing unittest xmlrpc pip setuptools certifi include pyc codecs_east_asian delocate
+  ssl hashlib sqlite3 curses xml dbm decimal ctypes multiprocessing unittest xmlrpc pip setuptools certifi include pyc codecs_east_asian delocate "dist-info"
 
 # Phase 2: Remove additional build tools and unused dependencies
 echo
@@ -29,11 +29,6 @@ echo "Removing additional build tools and unused dependencies..."
 "$THIN_PYTHON_SCRIPT" \
   "$PYTHON_DIR" \
   altgraph macholib packaging regex typing_extensions asyncio requests urllib3 idna charset_normalizer pydoc email html http wsgiref zipfile tomllib lsprof statistics
-
-# Phase 3: Remove .dist-info metadata directories (not needed at runtime)
-echo
-echo "Removing .dist-info directories..."
-/usr/bin/find "$PYTHON_DIR" -type d -name "*-*.dist-info" -exec /bin/rm -rf {} +
 
 echo
 echo "Done."
