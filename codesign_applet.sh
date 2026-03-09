@@ -26,12 +26,15 @@ if test "$?" != "0"; then
     exit 1
 fi
 
+echo "Removing quarantine xattr"
+/usr/bin/xattr -dr 'com.apple.quarantine' "$app_to_sign" 2>/dev/null
+
 entitlements_path="$self_dir/OMCApplet/OMCApplet.entitlements"
 entitlements_path_root="$self_dir/OMCApplet.entitlements"
 
 entitlements=""
 
-if test -z "$identity"; then
+if test -z "$identity" || test "$identity" = "-"; then
     identity="-"
     timestamp="--timestamp=none"
     sign_options=""
