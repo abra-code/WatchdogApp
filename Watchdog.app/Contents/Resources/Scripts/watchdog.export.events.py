@@ -3,8 +3,8 @@
 import os
 import sys
 
-script_name = os.path.basename(sys.argv[0])
-print(f"[{script_name}]")
+# script_name = os.path.basename(sys.argv[0])
+# print(f"[{script_name}]")
 
 save_path = os.environ.get("OMC_DLG_SAVE_AS_PATH", "")
 

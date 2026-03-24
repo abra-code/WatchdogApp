@@ -4,8 +4,8 @@ import os
 import subprocess
 import sys
 
-script_name = os.path.basename(sys.argv[0])
-print(f"[{script_name}]")
+# script_name = os.path.basename(sys.argv[0])
+# print(f"[{script_name}]")
 
 reveal_button_id = "8"
 info_button_id = "9"

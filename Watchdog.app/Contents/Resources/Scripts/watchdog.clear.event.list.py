@@ -4,8 +4,8 @@ import os
 import subprocess
 import sys
 
-script_name = os.path.basename(sys.argv[0])
-print(f"[{script_name}]")
+# script_name = os.path.basename(sys.argv[0])
+# print(f"[{script_name}]")
 
 dialog_tool = os.path.join(
     os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "omc_dialog_control"

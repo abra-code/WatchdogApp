@@ -4,8 +4,8 @@ import os
 import subprocess
 import sys
 
-script_name = os.path.basename(sys.argv[0])
-print(f"[{script_name}]")
+# script_name = os.path.basename(sys.argv[0])
+# print(f"[{script_name}]")
 
 obj_path = os.environ.get("OMC_OBJ_PATH", "")
 if not obj_path:

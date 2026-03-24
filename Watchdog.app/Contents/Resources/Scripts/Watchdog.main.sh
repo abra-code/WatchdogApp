@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "[$(/usr/bin/basename "$0")]"
+# echo "[$(/usr/bin/basename "$0")]"
 
 DIR_TO_WATCH=""
 if [ -z "${OMC_OBJ_PATH}" ]; then

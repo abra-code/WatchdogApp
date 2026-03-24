@@ -4,8 +4,8 @@ import os
 import subprocess
 import sys
 
-script_name = os.path.basename(sys.argv[0])
-print(f"[{script_name}]")
+# script_name = os.path.basename(sys.argv[0])
+# print(f"[{script_name}]")
 
 # Column 4 in the events table contains the file path
 file_event_paths = os.environ.get("OMC_NIB_TABLE_1_COLUMN_4_VALUE", "")
