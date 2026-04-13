@@ -9,6 +9,8 @@ It utilizes "watchdog" python module:<br>
 https://pypi.org/project/watchdog/<br>
 <br>
 
+![Watchdog Screenshot](Images/Watchdog.png)
+
 ### Creating Watchdog.app step-by-step
 
 [Building Watchdog](building_watchdog.md)<br>
