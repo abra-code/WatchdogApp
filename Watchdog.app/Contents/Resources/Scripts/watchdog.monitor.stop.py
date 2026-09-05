@@ -7,15 +7,9 @@ import sys
 # script_name = os.path.basename(sys.argv[0])
 # print(f"[{script_name}]")
 
-# Find and kill the watchmedo process monitoring the current directory
-watchmedo = os.path.join(
-    os.environ.get("OMC_APP_BUNDLE_PATH", ""),
-    "Contents",
-    "Library",
-    "Python",
-    "bin",
-    "watchmedo",
-)
+# Find and kill the watchmedo process monitoring the current directory.
+# watchmedo runs as `python3 -m watchdog.watchmedo` (module from Contents/Library/Packages).
+watchmedo_match = "-m watchdog.watchmedo"
 
 obj_path = os.environ.get("OMC_OBJ_PATH", "")
 
@@ -26,7 +20,7 @@ subprocess.run(
         "-U",
         os.environ.get("USER", ""),
         "-f",
-        f".* {watchmedo} shell-command .* {obj_path}$",
+        f".* {watchmedo_match} shell-command .* {obj_path}$",
     ]
 )
 

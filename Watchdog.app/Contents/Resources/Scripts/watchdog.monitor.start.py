@@ -27,15 +27,9 @@ python = os.path.join(
 )
 print(f"PYTHON: {python}")
 
-watchmedo = os.path.join(
-    os.environ.get("OMC_APP_BUNDLE_PATH", ""),
-    "Contents",
-    "Library",
-    "Python",
-    "bin",
-    "watchmedo",
-)
-print(f"WATCHMEDO: {watchmedo}")
+# watchdog is installed in Contents/Library/Packages (on PYTHONPATH, set by OMC), so
+# run watchmedo as a module rather than via a launcher inside the Python runtime.
+print(f"WATCHMEDO: {python} -m watchdog.watchmedo")
 
 event_sh = os.path.join(
     os.environ.get("OMC_APP_BUNDLE_PATH", ""),
@@ -82,7 +76,8 @@ command_str = f'source "{event_sh}" "$watch_object" "$watch_event_type" "$watch_
 
 args = [
     python,
-    watchmedo,
+    "-m",
+    "watchdog.watchmedo",
     "shell-command",
     watch_recursive,
     watch_ignore_dirs,

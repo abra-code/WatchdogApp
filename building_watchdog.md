@@ -46,41 +46,52 @@ At this point we have the basic running app with "Hello World" functionality exe
 
 ### Step 2: Installing Python "watchdog" module
 
-Change working directory to operate inside embedded Python module and verify it works:
+We install the `watchdog` module into `Contents/Library/Packages/` rather than into the embedded Python's own `site-packages`. OMC adds `Contents/Library/Packages/` to `PYTHONPATH` for every command the applet runs, and — unlike the embedded `Python/` runtime — that directory is never overwritten when the Python runtime is upgraded or rebuilt (AppletBuilder replaces `Contents/Library/Python/` wholesale, wiping anything installed inside it). Keeping dependencies in `Packages/` is what lets them survive a rebuild.
+
+The quick path is the helper script `install_watchdog.sh` (next to this file), which does the universal install into `Packages/` and verifies it in one step — run it after building the applet and before `thin_watchdog.sh` (it needs the embedded Python's `pip`, which thinning removes):
 ```
-cd ~/git/WatchdogApp/Watchdog.app/Contents/Library/Python/bin
+./install_watchdog.sh [path/to/Watchdog.app]   # defaults to ./Watchdog.app
+```
+The manual steps below explain what it does.
+
+First verify the embedded interpreter runs:
+```
+cd ~/git/WatchdogApp/Watchdog.app
+PY="Contents/Library/Python/bin/python3"
 export PYTHONPYCACHEPREFIX=/tmp/Pyc
-./python3 --help
+"$PY" --help
 ```
-If you are on Apple Silicon Mac, run the following command to build and install Universal "watchdog" module:
+On an Apple Silicon Mac, build and install a Universal "watchdog" into `Packages/` with `--target`:
 ```
 export ARCHFLAGS="-arch x86_64 -arch arm64"
-arch -x86_64 ./python3 -m pip install --verbose --force-reinstall --no-binary :all: watchdog
-
+arch -x86_64 "$PY" -m pip install --verbose --force-reinstall --no-binary :all: \
+    --target "Contents/Library/Packages" watchdog
 ```
-Note: `arch -x86_64` executes the binary under Rosetta emulation. This builds universal binaries with ARCHFLAGS as above on my Apple Silicon Mac. When running without `arch -x86_64` I ended up with single arm64 architecture for some reason. If the build succeeds you will see 'watchmedo' tool in Python/bin.
-Verify the properly built universal binary with:
+Note: `arch -x86_64` runs the interpreter under Rosetta emulation; together with `ARCHFLAGS` it produces universal binaries on my Apple Silicon Mac (without `arch -x86_64` I ended up with arm64-only for some reason). `--target` directs the install into `Packages/` instead of the runtime. After it succeeds you will find the `watchdog` package — plus a `bin/watchmedo` launcher — under `Contents/Library/Packages/`.
+Verify the C extension is a universal binary:
 ```
-lipo -info ../lib/python3.*/site-packages/*_watchdog_fsevents*.so
+lipo -info Contents/Library/Packages/_watchdog_fsevents*.so
 ```
 You should see the result like:
-`Architectures in the fat file: ../lib/python3.14/site-packages/_watchdog_fsevents.cpython-314-darwin.so are: x86_64 arm64 `<br>
-Now we are ready to try `watchmedo` tool:
+`Architectures in the fat file: Contents/Library/Packages/_watchdog_fsevents.cpython-314-darwin.so are: x86_64 arm64 `<br>
+Now we are ready to try `watchmedo`. Because the module lives in `Packages/`, put that directory on `PYTHONPATH` (OMC does this automatically inside the running applet) and invoke it as a module:
 ```
-./python3 watchmedo --help
-./python3 watchmedo log --help
-./python3 watchmedo log --verbose --recursive ~/Downloads
+export PYTHONPATH="$PWD/Contents/Library/Packages"
+"$PY" -m watchdog.watchmedo --help
+"$PY" -m watchdog.watchmedo log --help
+"$PY" -m watchdog.watchmedo log --verbose --recursive ~/Downloads
 ```
-After running the above command the `watchmedo` tool enters a runloop observing `~/Downloads` and waiting for something to happen there. Add or remove a file. modify some text and see the file events begin reported by `watchmedo` in Terminal.
+After running the above command `watchmedo` enters a runloop observing `~/Downloads` and waiting for something to happen there. Add or remove a file, modify some text, and see the file events get reported by `watchmedo` in Terminal.
 
-Next, let's create an `event.sh` script to be executed by `watchmedo shell-command event.sh`. See `./python3 watchmedo shell-command --help` for details. This allows us execute our own script for each received file event.
+Next, let's create an `event.sh` script to be executed by `watchmedo shell-command`. See `"$PY" -m watchdog.watchmedo shell-command --help` for details. This allows us to execute our own script for each received file event.
 We are going to place `event.sh` in:
 `~/git/WatchdogApp/Watchdog.app/Contents/Resources/Scripts/`
 
-Now test monitoring "Downloads" folder with our custom "event.sh" script:
+Now test monitoring "Downloads" folder with our custom "event.sh" script (passing the script path via an exported variable, the same way the applet's handler does):
 
 ```
-./python3 watchmedo shell-command --recursive --ignore-directories --wait --command='source "../../../Resources/Scripts/event.sh" "${watch_object}" "${watch_event_type}" "${watch_src_path}" "${watch_dest_path}"' $HOME/Downloads
+export EVENT_SH="$PWD/Contents/Resources/Scripts/event.sh"
+"$PY" -m watchdog.watchmedo shell-command --recursive --ignore-directories --wait --command='source "${EVENT_SH}" "${watch_object}" "${watch_event_type}" "${watch_src_path}" "${watch_dest_path}"' $HOME/Downloads
 ```
 
 Saving a new test.txt file in Downloads folder with BBEdit produces something like:
@@ -435,7 +446,7 @@ Python:
 ```python
 obj_path = os.environ.get("OMC_OBJ_PATH", "")
 python = os.path.join(os.environ.get("OMC_APP_BUNDLE_PATH", ""), "Contents/Library/Python/bin/python3")
-watchmedo = os.path.join(os.environ.get("OMC_APP_BUNDLE_PATH", ""), "Contents/Library/Python/bin/watchmedo")
+# watchdog lives in Contents/Library/Packages (on PYTHONPATH, set by OMC); run it as a module.
 event_sh = os.path.join(os.environ.get("OMC_APP_BUNDLE_PATH", ""), "Contents/Resources/Scripts/event.sh")
 
 is_recursive = os.environ.get("OMC_NIB_DIALOG_CONTROL_2_VALUE", "") == "1"
@@ -454,7 +465,7 @@ dlg_guid = os.environ.get("OMC_NIB_DLG_GUID", "")
 subprocess.run([dialog_tool, dlg_guid, "1", "omc_table_remove_all_rows"])
 
 command_str = f"source \"{event_sh}\" \"$watch_object\" \"$watch_event_type\" \"$watch_src_path\" \"$watch_dest_path\""
-args = [python, watchmedo, "shell-command", watch_recursive, watch_ignore_dirs,
+args = [python, "-m", "watchdog.watchmedo", "shell-command", watch_recursive, watch_ignore_dirs,
         watch_patterns, watch_ignore_patterns, "--wait", "--command", command_str, obj_path]
 args = [arg for arg in args if arg]
 
@@ -485,7 +496,7 @@ WATCH_IGNORE_PATTERNS=$([ -n "${IGNORE_PATTERN_LIST}" ] && echo "--ignore-patter
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_remove_all_rows
 
-"$PYTHON" "$WATCHMEDO" shell-command \
+"$PYTHON" -m watchdog.watchmedo shell-command \
     ${WATCH_RECURSIVE} ${WATCH_IGNORE_DIRS} ${WATCH_PATTERNS} ${WATCH_IGNORE_PATTERNS} \
     --wait \
     --command='source "${EVENT_SH}" "${watch_object}" "${watch_event_type}" "${watch_src_path}" "${watch_dest_path}"' \
@@ -497,8 +508,8 @@ dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 
 Shell:
 ```bash
-WATCHMEDO="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/watchmedo"
-/usr/bin/pkill -U "${USER}" -f ".* ${WATCHMEDO} shell-command .* ${OMC_OBJ_PATH}$"
+# watchmedo runs as `python3 -m watchdog.watchmedo` (module from Contents/Library/Packages).
+/usr/bin/pkill -U "${USER}" -f ".* -m watchdog.watchmedo shell-command .* ${OMC_OBJ_PATH}$"
 
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 "$dialog_tool" "$OMC_NIB_DLG_GUID" "6" omc_enable
@@ -511,8 +522,8 @@ dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
 
 Shell:
 ```bash
-WATCHMEDO="${OMC_APP_BUNDLE_PATH}/Contents/Library/Python/bin/watchmedo"
-RUNNING_PID=$(/usr/bin/pgrep -U "${USER}" -f ".* ${WATCHMEDO} shell-command .* ${OMC_OBJ_PATH}$")
+# watchmedo runs as `python3 -m watchdog.watchmedo` (module from Contents/Library/Packages).
+RUNNING_PID=$(/usr/bin/pgrep -U "${USER}" -f ".* -m watchdog.watchmedo shell-command .* ${OMC_OBJ_PATH}$")
 
 if [ -n "${RUNNING_PID}" ]; then
     source "${OMC_APP_BUNDLE_PATH}/Contents/Resources/Scripts/watchdog.monitor.stop.sh"
