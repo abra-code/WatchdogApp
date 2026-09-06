@@ -60,23 +60,70 @@ check "the Finder was not opened" "0" "$(tool_calls open)"
 check "the user was told" "1" "$(alerts_count)"
 check "  and told what was wrong" "1" "$(alerts_mention 'does not exist')"
 
-section "quicklook previews the selected file"
-tools_reset
+section "the eye button hands the selected file to the preview window"
+# The preview is one of this app's own ActionUI windows now, not a qlmanage
+# process, so the handler no longer runs anything. Its whole job is to check the
+# file is still there, put the path on the board this window hands off through,
+# and chain to the command that carries the preview window.
+#
+# The board is cleared first, like every other channel a section measures. It
+# holds nothing at this point in the file, so the check is live either way - but
+# an assertion that reads a channel it did not reset is one bad merge away from
+# passing on a value it did not cause.
 alerts_reset
+chains_reset
+clear_preview_handoff
 omc_table_cell "$ID_EVENT_TABLE" "$COLUMN_PATH" "$existing_file"
 omc_run watchdog.quicklook
-check_status "quicklook exits cleanly" 0
-check "qlmanage was run once" "1" "$(tool_calls qlmanage)"
-check "  in preview mode" "yes" "$(tool_got_arg qlmanage "-p")"
-check "  on the selected file" "yes" "$(tool_got_arg qlmanage "$existing_file")"
+check_status "the eye button exits cleanly" 0
+check "the preview window was asked for" "1" "$(chain_asked watchdog.preview)"
+check "  and the selected file was handed over" "$existing_file" "$(preview_handoff)"
 check "no alert was raised" "0" "$(alerts_count)"
 
-section "quicklook on a file that is already gone says so"
-tools_reset
+section "the preview window opens on the file it was handed"
+# The init handler runs in the preview window, which has no table to read the
+# selection from: the path reaches it only through the board, named by the event
+# window that chained here. omc_child_sheet is the harness's word for exactly
+# that arrangement - a second window with its own uuid and the originating one
+# in $OMC_PARENT_DIALOG_GUID, which is what the engine sets up before it builds
+# a dialog. Dispatching in the new window is what makes the assertion mean
+# something: omc_dialog_control writes to whatever uuid it is handed, so reading
+# the result back through the event window's uuid would pass for a handler
+# writing to the wrong window.
+omc_child_sheet Preview
+ui_reset
+omc_run watchdog.preview.init
+check_status "the init handler exits cleanly" 0
+check "the preview was pointed at the file" "$existing_file" "$(ui_value "$ID_PREVIEW")"
+check "and the window took the file's name" "notes.txt" "$(ui_title)"
+
+section "the preview window handed nothing is left alone"
+# Not a situation a user can reach - the eye button alerts instead of chaining
+# when there is no file - but it decides what a bug looks like, and the handler
+# has to pick: an untouched window, or one retitled to "" and pointed at "".
+# Counting the writes is what tells those apart. Reading the value back would
+# not: a handler that wrote the empty path answers "" exactly as one that wrote
+# nothing does, so the obvious assertion here is one that cannot fail.
+#
+# The alert count is the other half of "left alone", and the handler's docstring
+# claims it: blank reads as nothing to see, an alert reads as something broken.
+ui_reset
 alerts_reset
+clear_preview_handoff "$OMC_PARENT_DIALOG_GUID"
+omc_run watchdog.preview.init
+check_status "the init handler exits cleanly" 0
+check "the window was not written to at all" "0" "$(ui_calls .)"
+check "and nothing was raised at the user" "0" "$(alerts_count)"
+
+# Back to the event window: everything below reads and writes that one.
+omc_leave_sheet
+
+section "the eye button on a file that is already gone says so"
+alerts_reset
+chains_reset
 omc_table_cell "$ID_EVENT_TABLE" "$COLUMN_PATH" "$missing_file"
 omc_run watchdog.quicklook
-check "no preview was attempted" "0" "$(tool_calls qlmanage)"
+check "no preview window was asked for" "0" "$(chain_asked watchdog.preview)"
 check "the user was told" "1" "$(alerts_count)"
 
 section "file info runs stat on the selected file"

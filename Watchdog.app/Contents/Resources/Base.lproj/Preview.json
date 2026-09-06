@@ -1,0 +1,16 @@
+{
+  "type": "QuickLook",
+  "id": 200,
+  "properties": {
+    "previewStyle": "normal",
+    "showsChrome": false,
+    "frame": {
+      "minWidth": 400,
+      "minHeight": 300,
+      "idealWidth": 760,
+      "idealHeight": 620,
+      "maxWidth": "infinity",
+      "maxHeight": "infinity"
+    }
+  }
+}

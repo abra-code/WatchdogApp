@@ -30,12 +30,18 @@ TEST_HELPERS="$OMCTEST_TESTS/helpers"
 # with a trailing comment. Restating the numbers here would let the two lists
 # disagree silently; importing them means a renamed constant fails loudly at the
 # guard below instead of every check failing one by one with no hint why.
+#
+# The PB_ line is the same rule for a string: the preview hand-off board is
+# named by a prefix the applet and the suite have to agree on exactly, so it is
+# read rather than retyped.
 eval "$(/usr/bin/sed -n \
     -e 's/^\(ID_[A-Z0-9_]*\) *= *\([0-9][0-9]*\).*$/\1=\2/p' \
     -e 's/^\(COLUMN_[A-Z0-9_]*\) *= *\([0-9][0-9]*\).*$/\1=\2/p' \
+    -e 's/^\(PB_[A-Z0-9_]*\) *= *"\([^"]*\)".*$/\1="\2"/p' \
     "$OMCTEST_APP/Contents/Resources/Scripts/lib_watchdog.py")"
 
-[ -n "$ID_EVENT_TABLE" ] && [ -n "$ID_BTN_START" ] && [ -n "$COLUMN_PATH" ] || {
+[ -n "$ID_EVENT_TABLE" ] && [ -n "$ID_BTN_START" ] && [ -n "$COLUMN_PATH" ] \
+    && [ -n "$ID_PREVIEW" ] && [ -n "$PB_PREVIEW_PATH_PREFIX" ] || {
     printf 'lib.test.watchdog: no view ids imported from lib_watchdog.py\n' >&2
     exit 1
 }
@@ -55,8 +61,8 @@ view_env_value() { # <view-id>
 # --- Stand-ins for the binaries the harness cannot reach -----------------------
 #
 # omctest intercepts tools by rebuilding $OMC_OMC_SUPPORT_PATH. pkill, pgrep,
-# open, qlmanage, stat, pbcopy and the embedded Python are named by absolute
-# path, so lib_watchdog.py names each through an environment variable and the
+# open, stat, pbcopy and the embedded Python are named by absolute path, so
+# lib_watchdog.py names each through an environment variable and the
 # suite points that variable at a recorder. Without those seams these handlers
 # would simply be uncovered - and a real pkill under test would signal processes
 # belonging to whoever is running the suite.
@@ -113,7 +119,7 @@ install_fakes() {
     export WATCHDOG_TEST_RECORD_DIR
 
     local one_tool
-    for one_tool in pkill pgrep open qlmanage stat pbcopy python; do
+    for one_tool in pkill pgrep open stat pbcopy python; do
         /bin/cp "$TEST_HELPERS/record.sh" "$(fakes_dir)/$one_tool.sh"
         /bin/chmod +x "$(fakes_dir)/$one_tool.sh"
     done
@@ -121,13 +127,12 @@ install_fakes() {
     WATCHDOG_PKILL_TOOL="$(fakes_dir)/pkill.sh"
     WATCHDOG_PGREP_TOOL="$(fakes_dir)/pgrep.sh"
     WATCHDOG_OPEN_TOOL="$(fakes_dir)/open.sh"
-    WATCHDOG_QLMANAGE_TOOL="$(fakes_dir)/qlmanage.sh"
     WATCHDOG_STAT_TOOL="$(fakes_dir)/stat.sh"
     WATCHDOG_PBCOPY_TOOL="$(fakes_dir)/pbcopy.sh"
     WATCHDOG_PYTHON="$(fakes_dir)/python.sh"
 
     export WATCHDOG_PKILL_TOOL WATCHDOG_PGREP_TOOL WATCHDOG_OPEN_TOOL
-    export WATCHDOG_QLMANAGE_TOOL WATCHDOG_STAT_TOOL WATCHDOG_PBCOPY_TOOL
+    export WATCHDOG_STAT_TOOL WATCHDOG_PBCOPY_TOOL
     export WATCHDOG_PYTHON
 }
 
@@ -231,6 +236,54 @@ def walk(node):
 result = walk(json.load(open(sys.argv[1])))
 sys.stdout.write("yes" if result else "no")
 ' "$OMCTEST_APP/Contents/Resources/Base.lproj/Watchdog.json" "$1"
+}
+
+# --- The preview window's hand-off ---------------------------------------------
+#
+# Read back through the same pasteboard the handlers use, rather than out of the
+# stub's storage: the stub's file layout is the harness's business, and a test
+# reaching into it would keep passing after the applet stopped using the tool.
+#
+# The board is keyed by the EVENT window, which is what the eye button writes
+# under and what the preview window's init handler reads through
+# $OMC_PARENT_DIALOG_GUID. Both helpers default to the current window, which is
+# the event window everywhere they are called.
+preview_handoff() { # [event-window-uuid] -> the path the eye button handed over
+    "$OMC_OMC_SUPPORT_PATH/pasteboard" \
+        "$PB_PREVIEW_PATH_PREFIX${1:-$OMC_ACTIONUI_WINDOW_UUID}" get
+}
+
+clear_preview_handoff() { # [event-window-uuid]
+    "$OMC_OMC_SUPPORT_PATH/pasteboard" \
+        "$PB_PREVIEW_PATH_PREFIX${1:-$OMC_ACTIONUI_WINDOW_UUID}" set ""
+}
+
+# --- The bundle itself ---------------------------------------------------------
+#
+# Only the applet's own resources: Abracode.framework ships nibs for the
+# engine's built-in input dialogs, and those are not this applet's to answer for.
+# -prune matters: a .nib is a directory holding designable.nib and
+# keyedobjects.nib, so without it one nib bundle counts three times.
+applet_nib_count() { # -> count of .nib bundles under the applet's Resources
+    local _nibs
+    _nibs="$(/usr/bin/find "$OMCTEST_APP/Contents/Resources" -name "*.nib" -prune -print 2>/dev/null)"
+    printf '%s' "$_nibs" | /usr/bin/grep -c .
+}
+
+# NSMainNibFile is the switch the engine reads at launch: named, it takes the
+# legacy NSApplicationMain path and the programmatic menu bar is never installed.
+# NAMED, not merely present - OMCApplet/main.m branches on the value's length,
+# so a key with an empty string is nib-less to the engine. plutil is asked for
+# the value rather than grep for the key, so the helper tests what the engine
+# tests. A missing key exits non-zero, which is the nib-less answer.
+# An unreadable Info.plist answers "yes", not "no": a check that passes because
+# it could not look is worse than no check.
+info_plist_names_main_nib() { # -> yes|no
+    [ -r "$OMCTEST_APP/Contents/Info.plist" ] || { printf 'yes'; return; }
+    local _named
+    _named="$(/usr/bin/plutil -extract NSMainNibFile raw -o - \
+        "$OMCTEST_APP/Contents/Info.plist" 2>/dev/null)"
+    [ -n "$_named" ] && printf 'yes' || printf 'no'
 }
 
 # --- The watched directory -----------------------------------------------------

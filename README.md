@@ -18,6 +18,14 @@ and every command handler is a Python script under `Watchdog.app/Contents/Resour
 The commands themselves are declared in `Watchdog.app/Contents/Resources/Command.json`.
 Requires OMC 5.3 or newer.
 
+The eye button opens a second ActionUI document, `Base.lproj/Preview.json`, holding
+one `QuickLook` element. That element comes from the `ActionUIQuickLook` add-on,
+which `Abracode.framework` links and registers at launch, so the preview is a
+window of this app rather than a `qlmanage` process. A chain request carries no
+payload, so the selected path travels from the event window to the preview
+window's init handler on a named pasteboard, keyed by the event window's uuid -
+which the engine hands the new window's subcommands as `$OMC_PARENT_DIALOG_GUID`.
+
 The applet ships no nib of its own. `Info.plist` names no `NSMainNibFile`, so the
 engine installs the standard macOS menu bar programmatically. There is no
 `MainMenu.json` either: Watchdog adds nothing to that bar and needs no overrides.

@@ -37,6 +37,17 @@ check "QuickLook starts disabled" "yes" "$(json_declares_disabled "$ID_BTN_QUICK
 # The positive control: Start is the one button that IS live at rest.
 check "Start starts enabled" "no" "$(json_declares_disabled "$ID_BTN_START")"
 
+section "the applet is nib-less"
+# The window is ActionUI JSON and the menu bar is built by the engine, so the
+# bundle carries no nib of its own. NSMainNibFile is the switch: while it names a
+# nib the engine takes the legacy NSApplicationMain path and never installs the
+# programmatic bar. The first check is the load-bearing one - a stray nib passes
+# appletbuilder's own bundle validation unremarked. The second cannot go red
+# alone, because a NSMainNibFile naming a nib that is gone halts validation
+# before the suite runs; it is here to name the switch when both go red together.
+check "no nib among the applet's own resources" "0" "$(applet_nib_count)"
+check "Info.plist names no main nib" "no" "$(info_plist_names_main_nib)"
+
 section "the recorder keeps every argument it is given"
 # Guards the rest of the suite: /bin/echo swallows an argument that is exactly
 # "-n", so a recorder built on it would silently drop one and every assertion

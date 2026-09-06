@@ -55,6 +55,22 @@
       "EXECUTION_MODE": "exe_script_file"
     },
     {
+      "COMMAND_ID": "watchdog.preview",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file",
+      "ACTIONUI_WINDOW": {
+        "JSON_NAME": "Preview",
+        "INIT_SUBCOMMAND_ID": "watchdog.preview.init",
+        "IS_BLOCKING": false
+      }
+    },
+    {
+      "COMMAND_ID": "watchdog.preview.init",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file",
+      "WAIT_FOR_TASK_COMPLETION": true
+    },
+    {
       "COMMAND_ID": "watchdog.file.info",
       "NAME": "Watchdog",
       "EXECUTION_MODE": "exe_script_file_with_output_window",

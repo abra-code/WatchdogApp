@@ -10,7 +10,7 @@ own. Three things live here and nowhere else:
   3. The system binaries, each named through an overridable environment
      variable. omctest intercepts tools by rebuilding $OMC_OMC_SUPPORT_PATH,
      which cannot reach a binary addressed by absolute path - so anything the
-     suite must not really run (pkill, open, qlmanage) has to be nameable.
+     suite must not really run (pkill, open, pbcopy) has to be nameable.
 """
 
 import os
@@ -21,6 +21,9 @@ import subprocess
 APP_BUNDLE = os.environ.get("OMC_APP_BUNDLE_PATH", "")
 SUPPORT_PATH = os.environ.get("OMC_OMC_SUPPORT_PATH", "")
 WINDOW_UUID = os.environ.get("OMC_ACTIONUI_WINDOW_UUID", "")
+# The window whose handler opened this one, empty outside that case. The engine
+# always exports it: see the preview hand-off below, which is its only user.
+PARENT_WINDOW_UUID = os.environ.get("OMC_PARENT_DIALOG_GUID", "")
 CMD_GUID = os.environ.get("OMC_CURRENT_COMMAND_GUID", "")
 OBJ_PATH = os.environ.get("OMC_OBJ_PATH", "")
 
@@ -49,6 +52,12 @@ ID_BTN_QUICKLOOK = 11
 ID_BTN_CLEAR = 12   # the nib button carried no tag; it needed none, having no handler that addressed it
 ID_BTN_EXPORT = 13  # likewise
 
+# The preview window (Base.lproj/Preview.json) is a second document, so its one
+# id lives in its own range rather than continuing the nib's numbering. Nothing
+# enforces that separation - ids are unique per document, not per bundle - but
+# reading 200 in a handler says which window is being addressed.
+ID_PREVIEW = 200
+
 # The buttons that act on the selected row, and so are live only while there is one.
 SELECTION_BUTTON_IDS = (ID_BTN_REVEAL, ID_BTN_INFO, ID_BTN_COPY, ID_BTN_QUICKLOOK)
 
@@ -65,13 +74,13 @@ COLUMN_PATH = 4
 DIALOG_TOOL = os.path.join(SUPPORT_PATH, "omc_dialog_control")
 NEXT_CMD_TOOL = os.path.join(SUPPORT_PATH, "omc_next_command")
 ALERT_TOOL = os.path.join(SUPPORT_PATH, "alert")
+PASTEBOARD_TOOL = os.path.join(SUPPORT_PATH, "pasteboard")
 
 # --- System binaries, each behind a seam --------------------------------------
 
 PKILL_TOOL = os.environ.get("WATCHDOG_PKILL_TOOL", "/usr/bin/pkill")
 PGREP_TOOL = os.environ.get("WATCHDOG_PGREP_TOOL", "/usr/bin/pgrep")
 OPEN_TOOL = os.environ.get("WATCHDOG_OPEN_TOOL", "/usr/bin/open")
-QLMANAGE_TOOL = os.environ.get("WATCHDOG_QLMANAGE_TOOL", "/usr/bin/qlmanage")
 STAT_TOOL = os.environ.get("WATCHDOG_STAT_TOOL", "/usr/bin/stat")
 PBCOPY_TOOL = os.environ.get("WATCHDOG_PBCOPY_TOOL", "/usr/bin/pbcopy")
 
@@ -170,9 +179,68 @@ def set_monitor_buttons(running):
     set_enabled(ID_BTN_STOP, running)
 
 
+def set_window_title(title):
+    """Retitle this window. omc_window is the whole-window target, not a view."""
+    return subprocess.run([DIALOG_TOOL, WINDOW_UUID, "omc_window", str(title)])
+
+
 def next_command(command_id):
     """Chain to another command once this handler exits."""
     return subprocess.run([NEXT_CMD_TOOL, CMD_GUID, command_id])
+
+
+# --- The preview window's hand-off --------------------------------------------
+#
+# watchdog.quicklook runs in the event window and knows the path; the preview
+# window's init handler runs in a window that has no table to read it from. A
+# chain request carries no payload, so the path goes through a named pasteboard,
+# which is OMC's own inter-script channel.
+#
+# What the chain DOES carry is the two window uuids, and that is what keys the
+# board. Before building a new dialog the engine moves the originating window's
+# uuid into the parent slot (OnMyCommand.cp, SetParentDialogUUID), so the init
+# handler of the preview window reads $OMC_PARENT_DIALOG_GUID and gets the event
+# window that sent it. AppletBuilder's own applet hands its help and new-command
+# windows their arguments this way; keying per window rather than globally is
+# what keeps two Watchdog windows, each watching its own folder, from reading
+# each other's board.
+#
+# Unlike AppletBuilder's, this one is NOT cleared on read. Clearing is the
+# tidier half of that pattern, but it decides what an impatient double-click on
+# the eye button looks like: two clicks can both be handled before the first
+# preview opens, and a consumed board then leaves the second window blank. Not
+# clearing makes that case two windows showing the same file, which is what the
+# user asked for twice. A blank window looks broken; a duplicate does not.
+#
+# That is paid for in hygiene, and the trade is worth stating rather than
+# leaving implied: a board that is never consumed keeps the last previewed path
+# per event window until the user logs out. In the shipped app these are real
+# boards in the login session's pasteboard server, so any process running as the
+# user can read them - and could equally repoint a preview by writing one
+# between the click and the read. Local only, and no worse than the hand-off
+# every other applet in this family uses, but it is a leak and not a tidy detail.
+#
+# The name needs no test-only prefix: omctest's pasteboard stub is file-backed
+# under the run's own scratch tree, which the harness guarantees, so a suite
+# never reaches the login session's pasteboard server and cannot collide with
+# the copy of the app the developer has open.
+PB_PREVIEW_PATH_PREFIX = "WATCHDOG_PREVIEW_PATH_"
+
+
+def preview_handoff_key(window_uuid):
+    """The board the event window with this uuid hands its preview path on."""
+    return PB_PREVIEW_PATH_PREFIX + window_uuid
+
+
+def pb_set(key, value):
+    return subprocess.run([PASTEBOARD_TOOL, key, "set", str(value)])
+
+
+def pb_get(key):
+    result = subprocess.run(
+        [PASTEBOARD_TOOL, key, "get"], capture_output=True, text=True
+    )
+    return result.stdout
 
 
 def alert(message, title="Watchdog", level="caution"):
