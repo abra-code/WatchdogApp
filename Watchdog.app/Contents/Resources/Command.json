@@ -1,0 +1,100 @@
+{
+  "COMMAND_LIST": [
+    {
+      "NAME": "Watchdog",
+      "ACTIVATION_MODE": "act_folder",
+      "EXECUTION_MODE": "exe_script_file",
+      "ACTIONUI_WINDOW": {
+        "JSON_NAME": "Watchdog",
+        "INIT_SUBCOMMAND_ID": "watchdog.monitor.init",
+        "END_CANCEL_SUBCOMMAND_ID": "watchdog.monitor.close",
+        "IS_BLOCKING": false
+      },
+      "REQUIRED_MAC_OS_MIN_VERSION": "14.6",
+      "REQUIRED_OMC_VERSION": "5.3"
+    },
+    {
+      "COMMAND_ID": "watchdog.monitor.init",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "watchdog.monitor.close",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "watchdog.monitor.start",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "watchdog.monitor.stop",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "watchdog.monitor.restart",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "app.will.terminate",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file",
+      "WAIT_FOR_TASK_COMPLETION": true
+    },
+    {
+      "COMMAND_ID": "watchdog.reveal.in.finder",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "watchdog.quicklook",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "watchdog.file.info",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file_with_output_window",
+      "OUTPUT_WINDOW_SETTINGS": {
+        "TEXT_FONT": "Monaco",
+        "TEXT_SIZE": 11,
+        "WINDOW_ALPHA": 1,
+        "WINDOW_CLOSE_FADE_OUT": true,
+        "WINDOW_HEIGHT": 300,
+        "WINDOW_OPEN_FADE_IN": true,
+        "WINDOW_POSITION": "alert",
+        "WINDOW_TYPE": "regular",
+        "WINDOW_WIDTH": 900
+      }
+    },
+    {
+      "COMMAND_ID": "watchdog.copy.event",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "watchdog.monitor.selection.change",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    },
+    {
+      "COMMAND_ID": "watchdog.export.events",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file",
+      "SAVE_AS_DIALOG": {
+        "MESSAGE": "Save Event Log As...",
+        "DEFAULT_FILE_NAME": ["watchdog_events_", "__OBJ_NAME__", ".tsv"],
+        "DEFAULT_LOCATION": ["~"]
+      }
+    },
+    {
+      "COMMAND_ID": "watchdog.clear.event.list",
+      "NAME": "Watchdog",
+      "EXECUTION_MODE": "exe_script_file"
+    }
+  ],
+  "VERSION": 2
+}

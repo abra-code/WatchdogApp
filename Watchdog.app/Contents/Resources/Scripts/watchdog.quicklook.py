@@ -1,30 +1,17 @@
-#!/usr/bin/env python3
+"""Show a QuickLook preview of the selected event's file."""
 
 import os
 import subprocess
-import sys
 
-# script_name = os.path.basename(sys.argv[0])
-# print(f"[{script_name}]")
-
-# Column 4 in the events table contains the file path
-file_event_paths = os.environ.get("OMC_NIB_TABLE_1_COLUMN_4_VALUE", "")
+import lib_watchdog as wd
 
 preview_shown = False
 
-# show QuickLook preview for the first existing path
-for one_path in file_event_paths.strip().split("\n"):
-    one_path = one_path.strip()
-    if not one_path:
-        continue
-
+for one_path in wd.selected_paths():
     if os.path.exists(one_path):
-        subprocess.run(["/usr/bin/qlmanage", "-p", one_path])
+        subprocess.run([wd.QLMANAGE_TOOL, "-p", one_path])
         preview_shown = True
         break
 
 if not preview_shown:
-    alert_tool = os.path.join(os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "alert")
-    subprocess.run(
-        [alert_tool, "--level", "caution", "--title", "Watchdog", "File does not exist"]
-    )
+    wd.alert("File does not exist")

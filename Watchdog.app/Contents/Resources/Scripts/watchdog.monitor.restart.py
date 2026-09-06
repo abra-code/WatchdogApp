@@ -1,41 +1,24 @@
-#!/usr/bin/env python3
+"""Restart the monitor - the handler both filter checkboxes fire on change.
 
-import os
-import subprocess
+Restarting only means anything while a monitor is actually running. With none,
+a changed checkbox is simply the setting the next Start will use, so this exits
+without disturbing the window.
+
+The nib build did this by exec()ing the stop and start scripts inside this one.
+Chaining through omc_next_command instead lets the engine re-export the window's
+current control values for the start handler, which is where they come from.
+"""
+
 import sys
 
-# script_name = os.path.basename(sys.argv[0])
-# print(f"[{script_name}]")
+import lib_watchdog as wd
 
-# watchmedo runs as `python3 -m watchdog.watchmedo` (module from Contents/Library/Packages).
-watchmedo_match = "-m watchdog.watchmedo"
-
-obj_path = os.environ.get("OMC_OBJ_PATH", "")
-
-# Find the running watchmedo process monitoring this directory
-result = subprocess.run(
-    [
-        "/usr/bin/pgrep",
-        "-U",
-        os.environ.get("USER", ""),
-        "-f",
-        f".* {watchmedo_match} shell-command .* {obj_path}$",
-    ],
-    capture_output=True,
-    text=True,
-)
-running_pid = result.stdout.strip()
-
+running_pid = wd.monitor_pid()
 print(f"RUNNING_PID = {running_pid}")
 
-if running_pid:
-    scripts_dir = os.path.join(
-        os.environ.get("OMC_APP_BUNDLE_PATH", ""), "Contents", "Resources", "Scripts"
-    )
+if not running_pid:
+    print("no monitor running - nothing to restart")
+    sys.exit(0)
 
-    # Execute stop/start scripts in the same process
-    with open(os.path.join(scripts_dir, "watchdog.monitor.stop.py")) as f:
-        exec(f.read())
-
-    with open(os.path.join(scripts_dir, "watchdog.monitor.start.py")) as f:
-        exec(f.read())
+wd.stop_monitor()
+wd.next_command("watchdog.monitor.start")

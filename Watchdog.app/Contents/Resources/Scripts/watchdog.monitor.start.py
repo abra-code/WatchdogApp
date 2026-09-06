@@ -1,104 +1,70 @@
-#!/usr/bin/env python3
+"""Start the file monitor for the watched directory."""
 
 import os
+import shlex
 import subprocess
 import sys
 
-# script_name = os.path.basename(sys.argv[0])
-# print(f"[{script_name}]")
+import lib_watchdog as wd
 
-obj_path = os.environ.get("OMC_OBJ_PATH", "")
-if not obj_path:
+if not wd.OBJ_PATH:
     print("Error: directory to monitor not specified")
     sys.exit(1)
-elif not os.path.isdir(obj_path):
-    print(f"Error: '{obj_path}' is not a directory")
+
+if not os.path.isdir(wd.OBJ_PATH):
+    print(f"Error: '{wd.OBJ_PATH}' is not a directory")
     sys.exit(1)
 
-print(f"DIR_TO_WATCH: {obj_path}")
+print(f"DIR_TO_WATCH: {wd.OBJ_PATH}")
+print(f"PYTHON: {wd.PYTHON3}")
+print(f"WATCHMEDO: {wd.PYTHON3} -m {wd.WATCHMEDO_MODULE}")
+print(f"EVENT_SCRIPT: {wd.EVENT_SCRIPT}")
 
-python = os.path.join(
-    os.environ.get("OMC_APP_BUNDLE_PATH", ""),
-    "Contents",
-    "Library",
-    "Python",
-    "bin",
-    "python3",
-)
-print(f"PYTHON: {python}")
+recursive = wd.is_on(wd.view_value(wd.ID_RECURSIVE))
+include_dirs = wd.is_on(wd.view_value(wd.ID_INCLUDE_DIRS))
+patterns = wd.view_value(wd.ID_WATCH_PATTERNS).strip()
+ignore_patterns = wd.view_value(wd.ID_IGNORE_PATTERNS).strip()
 
-# watchdog is installed in Contents/Library/Packages (on PYTHONPATH, set by OMC), so
-# run watchmedo as a module rather than via a launcher inside the Python runtime.
-print(f"WATCHMEDO: {python} -m watchdog.watchmedo")
+print(f"RECURSIVE = {recursive}")
+print(f"INCLUDE_DIRS = {include_dirs}")
+print(f"PATTERNS = {patterns}")
+print(f"IGNORE_PATTERNS = {ignore_patterns}")
 
-event_sh = os.path.join(
-    os.environ.get("OMC_APP_BUNDLE_PATH", ""),
-    "Contents",
-    "Resources",
-    "Scripts",
-    "event.sh",
-)
-print(f"EVENT_SH: {event_sh}")
+# A run starts from an empty list: the rows on screen describe the previous run's
+# directory and settings.
+wd.clear_event_table()
 
-is_recursive = os.environ.get("OMC_NIB_DIALOG_CONTROL_2_VALUE", "")
-watch_recursive = "--recursive" if is_recursive == "1" else ""
-print(f"IS_RECURSIVE = {is_recursive}, WATCH_RECURSIVE = {watch_recursive}")
-
-is_include_dirs = os.environ.get("OMC_NIB_DIALOG_CONTROL_3_VALUE", "")
-watch_ignore_dirs = "" if is_include_dirs == "1" else "--ignore-directories"
-print(f"IS_INCLUDE_DIRS = {is_include_dirs}, WATCH_IGNORE_DIRS = {watch_ignore_dirs}")
-
-pattern_list = os.environ.get("OMC_NIB_DIALOG_CONTROL_4_VALUE", "")
-watch_patterns = f"--patterns={pattern_list}" if pattern_list else ""
-print(f"PATTERN_LIST = {pattern_list}, WATCH_PATTERNS = {watch_patterns}")
-
-ignore_pattern_list = os.environ.get("OMC_NIB_DIALOG_CONTROL_5_VALUE", "")
-watch_ignore_patterns = (
-    f"--ignore-patterns={ignore_pattern_list}" if ignore_pattern_list else ""
-)
-print(
-    f"IGNORE_PATTERN_LIST = {ignore_pattern_list}, WATCH_IGNORE_PATTERNS = {watch_ignore_patterns}"
+# watchmedo runs this through a shell, so the script path is shell-quoted rather
+# than merely wrapped in double quotes - an apostrophe in the path to the applet
+# would otherwise end the string and the monitor would never start.
+#
+# This quotes the APPLET's path, which is all that can be quoted here. The event
+# values cannot be: watchmedo does Template(command).safe_substitute(context) and
+# then Popen(command, shell=True) (watchdog/tricks/__init__.py), so "$watch_src_path"
+# is replaced textually BEFORE any shell sees it. A file created in the watched
+# directory whose name contains a double quote therefore ends the argument and the
+# rest of its name is run as shell code. That hole is inherent to watchmedo's
+# shell-command mode and predates this port; closing it means not using that mode.
+command_str = (
+    "source %s "
+    '"$watch_object" "$watch_event_type" "$watch_src_path" "$watch_dest_path"'
+    % shlex.quote(wd.EVENT_SCRIPT)
 )
 
-dialog_tool = os.path.join(
-    os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "omc_dialog_control"
-)
-dlg_guid = os.environ.get("OMC_NIB_DLG_GUID", "")
+args = [wd.PYTHON3, "-m", wd.WATCHMEDO_MODULE, "shell-command"]
+if recursive:
+    args.append("--recursive")
+if not include_dirs:
+    args.append("--ignore-directories")
+if patterns:
+    args.append(f"--patterns={patterns}")
+if ignore_patterns:
+    args.append(f"--ignore-patterns={ignore_patterns}")
+args += ["--wait", "--command", command_str, wd.OBJ_PATH]
 
-# Clear all rows from the table view (control ID 1)
-subprocess.run([dialog_tool, dlg_guid, "1", "omc_table_remove_all_rows"])
+print("$ " + " ".join(args) + " &")
 
-print("starting watchmedo")
-
-# Build the command string for watchmedo shell-command
-# The --command argument is a shell command string with single quotes preserved
-command_str = f'source "{event_sh}" "$watch_object" "$watch_event_type" "$watch_src_path" "$watch_dest_path"'
-
-args = [
-    python,
-    "-m",
-    "watchdog.watchmedo",
-    "shell-command",
-    watch_recursive,
-    watch_ignore_dirs,
-    watch_patterns,
-    watch_ignore_patterns,
-    "--wait",
-    "--command",
-    command_str,
-    obj_path,
-]
-
-# Filter out empty strings from optional arguments
-args = [arg for arg in args if arg]
-
-print(f"$ {' '.join(args)} &")
-
-# Spawn watchmedo in background and continue
 process = subprocess.Popen(args)
 print(f"watchmedo started with PID: {process.pid}")
 
-start_button_id = "6"
-stop_button_id = "7"
-subprocess.run([dialog_tool, dlg_guid, start_button_id, "omc_disable"])
-subprocess.run([dialog_tool, dlg_guid, stop_button_id, "omc_enable"])
+wd.set_monitor_buttons(running=True)

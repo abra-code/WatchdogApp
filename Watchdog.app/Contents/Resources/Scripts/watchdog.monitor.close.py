@@ -1,23 +1,9 @@
-#!/usr/bin/env python3
+"""The window was closed - stop the monitor it owned.
 
-import os
-import subprocess
-import sys
+Wired as END_CANCEL_SUBCOMMAND_ID. Killing by the watched directory rather than
+by pid leaves any other Watchdog window's monitor alone.
+"""
 
-# script_name = os.path.basename(sys.argv[0])
-# print(f"[{script_name}]")
+import lib_watchdog as wd
 
-# watchmedo runs as `python3 -m watchdog.watchmedo` (module from Contents/Library/Packages).
-watchmedo_match = "-m watchdog.watchmedo"
-
-obj_path = os.environ.get("OMC_OBJ_PATH", "")
-
-subprocess.run(
-    [
-        "/usr/bin/pkill",
-        "-U",
-        os.environ.get("USER", ""),
-        "-f",
-        f".* {watchmedo_match} shell-command .* {obj_path}$",
-    ]
-)
+wd.stop_monitor()

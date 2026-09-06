@@ -1,35 +1,9 @@
-#!/usr/bin/env python3
+"""Track the event table's selection and gate the four row actions on it."""
 
-import os
-import subprocess
-import sys
+import lib_watchdog as wd
 
-# script_name = os.path.basename(sys.argv[0])
-# print(f"[{script_name}]")
+# Every real row carries a timestamp, so a value in column 1 means a row is
+# selected and an empty one means the selection was cleared.
+has_selection = wd.table_value(wd.COLUMN_TIME) != ""
 
-reveal_button_id = "8"
-info_button_id = "9"
-copy_button_id = "10"
-quicklook_button_id = "11"
-
-dialog_tool = os.path.join(
-    os.environ.get("OMC_OMC_SUPPORT_PATH", ""), "omc_dialog_control"
-)
-
-dlg_guid = os.environ.get("OMC_NIB_DLG_GUID", "")
-
-
-# If column 1 has a value, a row is selected; otherwise, nothing is selected.
-column_1_value = os.environ.get("OMC_NIB_TABLE_1_COLUMN_1_VALUE", "")
-# print(f"OMC_NIB_TABLE_1_COLUMN_1_VALUE: '{column_1_value}'")
-
-has_selection = column_1_value != ""
-# print(f"has_selection: {has_selection}")
-
-enable_disable = "omc_enable" if has_selection else "omc_disable"
-# print(f"enable_disable: {enable_disable}")
-
-subprocess.run([dialog_tool, dlg_guid, reveal_button_id, enable_disable])
-subprocess.run([dialog_tool, dlg_guid, info_button_id, enable_disable])
-subprocess.run([dialog_tool, dlg_guid, copy_button_id, enable_disable])
-subprocess.run([dialog_tool, dlg_guid, quicklook_button_id, enable_disable])
+wd.set_enabled_many(wd.SELECTION_BUTTON_IDS, has_selection)

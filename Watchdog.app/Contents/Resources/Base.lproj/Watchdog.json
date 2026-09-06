@@ -1,0 +1,228 @@
+{
+  "type": "VStack",
+  "properties": {
+    "spacing": 0,
+    "frame": {
+      "minWidth": 800,
+      "minHeight": 400,
+      "idealWidth": 800,
+      "idealHeight": 600,
+      "maxWidth": "infinity",
+      "maxHeight": "infinity"
+    }
+  },
+  "children": [
+    {
+      "type": "HStack",
+      "properties": {
+        "alignment": "top",
+        "spacing": 20,
+        "padding": { "top": 14, "leading": 20, "trailing": 20, "bottom": 12 }
+      },
+      "children": [
+        {
+          "type": "VStack",
+          "properties": { "alignment": "leading", "spacing": 10 },
+          "children": [
+            {
+              "type": "Toggle",
+              "id": 2,
+              "properties": {
+                "title": "Observe files in subdirectories",
+                "style": "checkbox",
+                "isOn": true,
+                "help": "Recursive - show file events in all subdirectories",
+                "actionID": "watchdog.monitor.restart"
+              }
+            },
+            {
+              "type": "Toggle",
+              "id": 3,
+              "properties": {
+                "title": "Include directory events",
+                "style": "checkbox",
+                "isOn": false,
+                "help": "Record events for directories in addition to files",
+                "actionID": "watchdog.monitor.restart"
+              }
+            }
+          ]
+        },
+        {
+          "type": "VStack",
+          "properties": { "alignment": "leading", "spacing": 8 },
+          "children": [
+            {
+              "type": "HStack",
+              "properties": { "spacing": 8 },
+              "children": [
+                {
+                  "type": "Text",
+                  "properties": {
+                    "text": "Watch files matching:",
+                    "frame": { "width": 145, "alignment": "trailing" }
+                  }
+                },
+                {
+                  "type": "TextField",
+                  "id": 4,
+                  "properties": {
+                    "prompt": "Glob pattern, e.g.: *.txt;*.rtf",
+                    "help": "Semicolon-separated glob patterns; only matching files are reported",
+                    "frame": { "width": 290 }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "HStack",
+              "properties": { "spacing": 8 },
+              "children": [
+                {
+                  "type": "Text",
+                  "properties": {
+                    "text": "Ignore files matching:",
+                    "frame": { "width": 145, "alignment": "trailing" }
+                  }
+                },
+                {
+                  "type": "TextField",
+                  "id": 5,
+                  "properties": {
+                    "prompt": "Glob pattern, e.g.: *.tmp;*.temp",
+                    "help": "Semicolon-separated glob patterns; matching files are not reported",
+                    "frame": { "width": 290 }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        { "type": "Spacer" },
+        {
+          "type": "HStack",
+          "properties": { "spacing": 8, "padding": { "top": 6 } },
+          "children": [
+            {
+              "type": "Button",
+              "id": 7,
+              "properties": {
+                "systemImage": "stop.fill",
+                "imageScale": "large",
+                "buttonStyle": "bordered",
+                "foregroundStyle": "red",
+                "help": "Stop monitoring",
+                "disabled": true,
+                "actionID": "watchdog.monitor.stop"
+              }
+            },
+            {
+              "type": "Button",
+              "id": 6,
+              "properties": {
+                "systemImage": "play.fill",
+                "imageScale": "large",
+                "buttonStyle": "bordered",
+                "foregroundStyle": "green",
+                "help": "Start monitoring",
+                "actionID": "watchdog.monitor.start"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Table",
+      "id": 1,
+      "properties": {
+        "columns": ["Time", "📁", "🚩", "Path"],
+        "widths": [190, 24, 24, 520],
+        "minWidths": [140, 22, 22, 120],
+        "actionID": "watchdog.monitor.selection.change",
+        "padding": { "leading": 20, "trailing": 20 },
+        "frame": { "maxWidth": "infinity", "maxHeight": "infinity" }
+      }
+    },
+    {
+      "type": "HStack",
+      "properties": {
+        "spacing": 10,
+        "padding": { "top": 10, "leading": 20, "trailing": 20, "bottom": 12 }
+      },
+      "children": [
+        {
+          "type": "Button",
+          "id": 8,
+          "properties": {
+            "systemImage": "folder",
+            "imageScale": "large",
+            "buttonStyle": "plain",
+            "help": "Reveal in Finder",
+            "disabled": true,
+            "actionID": "watchdog.reveal.in.finder"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 11,
+          "properties": {
+            "systemImage": "eye",
+            "imageScale": "large",
+            "buttonStyle": "plain",
+            "help": "Preview selected file",
+            "disabled": true,
+            "actionID": "watchdog.quicklook"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 9,
+          "properties": {
+            "systemImage": "info.circle",
+            "imageScale": "large",
+            "buttonStyle": "plain",
+            "help": "File info",
+            "disabled": true,
+            "actionID": "watchdog.file.info"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 10,
+          "properties": {
+            "systemImage": "list.clipboard",
+            "imageScale": "large",
+            "buttonStyle": "plain",
+            "help": "Copy selected row",
+            "disabled": true,
+            "actionID": "watchdog.copy.event"
+          }
+        },
+        { "type": "Spacer" },
+        {
+          "type": "Button",
+          "id": 13,
+          "properties": {
+            "systemImage": "square.and.arrow.down",
+            "imageScale": "large",
+            "buttonStyle": "plain",
+            "help": "Export events to TSV file",
+            "actionID": "watchdog.export.events"
+          }
+        },
+        {
+          "type": "Button",
+          "id": 12,
+          "properties": {
+            "systemImage": "trash",
+            "imageScale": "large",
+            "buttonStyle": "plain",
+            "help": "Clear events list",
+            "actionID": "watchdog.clear.event.list"
+          }
+        }
+      ]
+    }
+  ]
+}

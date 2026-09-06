@@ -1,28 +1,26 @@
-#!/usr/bin/env python3
+"""Print stat(1) output for the selected event's file, into an output window."""
 
 import os
 import subprocess
-import sys
 
-# script_name = os.path.basename(sys.argv[0])
-# print(f"[{script_name}]")
+import lib_watchdog as wd
 
-# Column 4 in the events table contains the file path
-file_event_paths = os.environ.get("OMC_NIB_TABLE_1_COLUMN_4_VALUE", "")
+paths = wd.selected_paths()
 
 print()
 
-for one_path in file_event_paths.strip().split("\n"):
-    one_path = one_path.strip()
-    if not one_path:
-        continue
+if not paths:
+    print("  No event selected.")
 
+for one_path in paths:
     if os.path.exists(one_path):
         result = subprocess.run(
-            ["/usr/bin/stat", "-x", one_path], capture_output=True, text=True
+            [wd.STAT_TOOL, "-x", one_path], capture_output=True, text=True
         )
         print(result.stdout, end="")
     else:
+        # A deleted or moved-away file is the normal case here: the row records
+        # an event that has already happened.
         print(f'  File: "{one_path}"')
         print("  Status: file does not exist")
 

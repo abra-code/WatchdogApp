@@ -37,4 +37,4 @@ fi
 # echo "${event_row}"
 
 dialog_tool="$OMC_OMC_SUPPORT_PATH/omc_dialog_control"
-echo "${event_row}" | "$dialog_tool" "$OMC_NIB_DLG_GUID" 1 omc_table_add_rows_from_stdin
+echo "${event_row}" | "$dialog_tool" "$OMC_ACTIONUI_WINDOW_UUID" 1 omc_table_add_rows_from_stdin
