@@ -18,6 +18,11 @@ and every command handler is a Python script under `Watchdog.app/Contents/Resour
 The commands themselves are declared in `Watchdog.app/Contents/Resources/Command.json`.
 Requires OMC 5.3 or newer.
 
+The applet ships no nib of its own. `Info.plist` names no `NSMainNibFile`, so the
+engine installs the standard macOS menu bar programmatically. There is no
+`MainMenu.json` either: Watchdog adds nothing to that bar and needs no overrides.
+(`Abracode.framework` still carries nibs for the engine's own input dialogs.)
+
 `watchdog.export.events` reads the event table over the OMC 5.3 ActionUI remote
 bridge (`import omc`), which is the only way a handler can ask the window what it
 currently holds. Every other handler reads the values the engine exports when it
@@ -34,7 +39,8 @@ OMC environment. See `omctest_guide.md` in the OMC documentation.
 
 ### History
 
-Watchdog began as a shell-driven applet with an Interface Builder nib window, and
-was used as a worked example of moving such an applet to Python. The original
+Watchdog began as a shell-driven applet with an Interface Builder nib window and a
+nib menu bar, and was used as a worked example of moving such an applet to
+Python. The original
 step-by-step walkthrough and the parallel shell scripts are kept, unmaintained,
 under [Archive/](Archive/).

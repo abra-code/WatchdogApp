@@ -3,9 +3,9 @@
   "properties": {
     "spacing": 0,
     "frame": {
-      "minWidth": 800,
+      "minWidth": 900,
       "minHeight": 400,
-      "idealWidth": 800,
+      "idealWidth": 1000,
       "idealHeight": 600,
       "maxWidth": "infinity",
       "maxHeight": "infinity"
@@ -22,7 +22,11 @@
       "children": [
         {
           "type": "VStack",
-          "properties": { "alignment": "leading", "spacing": 10 },
+          "properties": {
+            "alignment": "leading",
+            "spacing": 10,
+            "frame": { "width": 220, "alignment": "leading" }
+          },
           "children": [
             {
               "type": "Toggle",
