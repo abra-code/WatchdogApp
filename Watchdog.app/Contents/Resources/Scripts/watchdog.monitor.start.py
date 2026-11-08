@@ -64,7 +64,20 @@ args += ["--wait", "--command", command_str, wd.OBJ_PATH]
 
 print("$ " + " ".join(args) + " &")
 
-process = subprocess.Popen(args)
+# watchmedo outlives this handler, so it must not hold the handler's input and
+# output: the engine counts a command as running until every holder of its output
+# pipe has closed it, and a monitor that inherited it kept this command "running"
+# for as long as it watched - the applet never went idle. Nothing reads
+# watchmedo's standard output; each event reaches the window through event.sh and
+# omc_dialog_control. Standard error is left alone: the engine does not pipe it
+# (the handler shares the applet's own), so it holds no command open, and it is
+# where a watchmedo traceback or an event.sh failure shows up - the terminal or
+# console the applet runs from, or applet.log in an integration test.
+process = subprocess.Popen(
+    args,
+    stdin=subprocess.DEVNULL,
+    stdout=subprocess.DEVNULL,
+)
 print(f"watchmedo started with PID: {process.pid}")
 
 wd.set_monitor_buttons(running=True)

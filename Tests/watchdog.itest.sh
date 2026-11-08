@@ -31,26 +31,6 @@ wait_for_event() { # <window> <text> <seconds>
     printf '%s\n' "$_rows"
 }
 
-# The monitor's start command never finishes in the engine's eyes: watchmedo, started with Popen
-# and not waited for, keeps the handler's output pipes open, so omc.test.status counts it as an
-# active command for as long as the monitor runs and the applet is never idle. So the test waits
-# for the applet's activity to stop changing instead of for idle.
-activity() { itest_call omc.test.status | /usr/bin/sed -n 's/.*"activity": \([0-9]*\).*/\1/p'; }
-wait_quiet() { # <seconds>: until the activity count holds for a second; a failed check otherwise
-    local _deadline=$(( SECONDS + $1 ))
-    local _last="$(activity)"
-    local _now=""
-    while [ "$SECONDS" -lt "$_deadline" ]; do
-        /bin/sleep 1
-        _now="$(activity)"
-        if [ -n "$_now" ] && [ "$_now" = "$_last" ]; then
-            return 0
-        fi
-        _last="$_now"
-    done
-    check "the applet settled within ${1}s" "yes" "no"
-    return 1
-}
 # Readiness: watchmedo reports nothing until it is up, and how long that takes depends on the
 # machine (its embedded Python loads cold in a freshly signed copy). Create probe files until one
 # shows up in the table, instead of guessing a delay.
@@ -71,7 +51,11 @@ wait_until_watching() { # <window> <seconds>
 section "The main command on a folder opens the monitor, which starts watching"
 before="$(itest_windows)"
 itest_run Watchdog --file "$WATCH" > /dev/null
-wait_quiet 60
+# The monitor's start command returns once watchmedo is started: watchmedo gets /dev/null for its
+# input and output, so it does not keep the command's pipes open and the applet goes idle while
+# it watches.
+itest_wait_idle 60
+check "the applet is idle while the monitor runs" "0" "$?"
 window="$(itest_new_window "$before")"
 check "the monitor window opened" "yes" "$([ -n "$window" ] && printf yes || printf no)"
 wait_until_watching "$window" 30
@@ -85,7 +69,7 @@ check_contains "the event table lists the new file" "$WATCH/itest-created.txt" "
 section "Export writes the log where the user chose"
 itest_answer_save "$ITEST_WORK/events.tsv"
 check "the Export button fires watchdog.export.events" "watchdog.export.events" "$(itest_click "$window" "$ID_BTN_EXPORT")"
-wait_quiet 60
+itest_wait_idle 60
 check "a save panel" "save" "$(itest_panel last kind)"
 check "with the default name from the folder" "watchdog_events_watched.tsv" "$(itest_panel last defaultName)"
 check "the log was written" "yes" "$([ -s "$ITEST_WORK/events.tsv" ] && printf yes || printf no)"
